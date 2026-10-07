@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>WhatsApp-очередь кровельщиков</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* layout: one narrow working column; a sticky day meter on top, the numbered send queue below */
+:root {
+  --bg: #f2f5f3; --surface: #ffffff; --ink: #16211d; --muted: #5a6a63; --line: #d7dfda;
+  --accent: #0f5a45; --accent-ink: #ffffff; --accent-soft: #e1efe9;
+  --warn: #8a5200; --warn-soft: #fbefd8;
+  --stop: #a3312b; --stop-soft: #f8e4e2;
+  --sent: #2c5a84; --sent-soft: #e2ecf6;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --surface: #19211e; --ink: #e5ece8; --muted: #94a49d; --line: #2b3733;
+    --accent: #5cc3a0; --accent-ink: #0b1512; --accent-soft: #1c322b;
+    --warn: #e5b061; --warn-soft: #382c12;
+    --stop: #ef8f88; --stop-soft: #3a1f1d;
+    --sent: #8fb8de; --sent-soft: #1b2a39;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #19211e; --ink: #e5ece8; --muted: #94a49d; --line: #2b3733;
+  --accent: #5cc3a0; --accent-ink: #0b1512; --accent-soft: #1c322b;
+  --warn: #e5b061; --warn-soft: #382c12;
+  --stop: #ef8f88; --stop-soft: #3a1f1d;
+  --sent: #8fb8de; --sent-soft: #1b2a39;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 20px 64px;
+}
+.wrap { max-width: 820px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 24px; line-height: 1.2; font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* day meter */
+.meter {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; display: flex; flex-direction: column; gap: 8px;
+}
+.meter-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; }
+.today { font-weight: 600; }
+.today b, .totals b { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-weight: 600; }
+.totals { color: var(--muted); font-size: 13px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; }
+.meter.full .bar i { background: var(--warn); }
+.limit-note { margin: 0; font-size: 13px; color: var(--warn); background: var(--warn-soft); padding: 6px 10px; border-radius: 6px; }
+
+/* settings */
+.settings { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.settings > summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
+.settings-body { padding: 4px 14px 16px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > span, fieldset > legend { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; padding: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.choice { display: flex; gap: 8px; align-items: flex-start; }
+.choice input { margin-top: 4px; accent-color: var(--accent); }
+input[type="text"], input[type="number"], textarea {
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;
+}
+input[type="number"] { max-width: 110px; font-family: var(--font-data); }
+textarea { min-height: 150px; resize: vertical; }
+
+/* batches */
+.batches { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.batch {
+  font: inherit; text-align: left; cursor: pointer; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.batch strong { font-weight: 600; }
+.batch span { font-size: 13px; color: var(--muted); }
+.batch span b { font-family: var(--font-data); font-weight: 600; }
+.batch[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.batch[aria-pressed="true"] strong { color: var(--accent); }
+select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; max-width: 100%; }
+
+/* filters */
+.filters { display: flex; flex-direction: column; gap: 10px; }
+.tabs, .flags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab, .flag {
+  font: inherit; font-size: 14px; cursor: pointer; color: var(--ink);
+  background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+}
+.tab b { font-family: var(--font-data); font-weight: 400; color: var(--muted); margin-left: 4px; }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tab[aria-pressed="true"] b { color: inherit; }
+.flag[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* queue */
+.queue { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.lead {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px; display: flex; flex-direction: column; gap: 10px;
+}
+.lead-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; min-width: 3ch; }
+.who { flex: 1 1 220px; min-width: 0; }
+.name { font-size: 17px; font-weight: 600; margin: 0; line-height: 1.25; overflow-wrap: anywhere; }
+.meta { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tag.good { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.tag.batch-tag { font-family: var(--font-data); border-color: var(--muted); color: var(--ink); }
+.tag.care { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.fact-field a { color: var(--accent); overflow-wrap: anywhere; }
+.msg {
+  margin: 0; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--bg); border-radius: 8px; padding: 10px 12px; max-width: 68ch;
+}
+.msg.pending { color: var(--muted); font-style: italic; }
+.actions, .status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn {
+  font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none;
+  color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px;
+}
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.primary[aria-disabled="true"] { background: transparent; color: var(--muted); border-color: var(--line); cursor: default; font-weight: 500; }
+.phone { font-family: var(--font-data); font-size: 13px; color: var(--muted); user-select: all; margin-left: auto; }
+.status { border-top: 1px solid var(--line); padding-top: 10px; }
+.status-label { font-size: 13px; color: var(--muted); }
+.lead.opened[data-status=""] .status-label { color: var(--warn); font-weight: 600; }
+.st { font: inherit; font-size: 13px; cursor: pointer; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; }
+/* stage tones: one colour language for the stage chips and the stage tag in the card head */
+.st[aria-pressed="true"] { font-weight: 600; }
+.st[aria-pressed="true"][data-tone="sent"], .tag.stage[data-tone="sent"] { background: var(--sent-soft); border-color: var(--sent); color: var(--sent); }
+.st[aria-pressed="true"][data-tone="ok"], .tag.stage[data-tone="ok"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.st[aria-pressed="true"][data-tone="warn"], .tag.stage[data-tone="warn"] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.st[aria-pressed="true"][data-tone="stop"], .tag.stage[data-tone="stop"] { background: var(--stop-soft); border-color: var(--stop); color: var(--stop); }
+.st[aria-pressed="true"][data-tone="win"], .tag.stage[data-tone="win"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.st[aria-pressed="true"][data-tone="muted"], .tag.stage[data-tone="muted"] { background: var(--line); border-color: var(--muted); color: var(--ink); }
+.tag.stage { font-weight: 600; }
+
+/* kanban: full-bleed row of stage columns, scrolls sideways */
+.views { display: flex; gap: 6px; }
+.board {
+  width: 100vw; margin-left: calc(50% - 50vw); padding: 2px 16px 16px;
+  display: flex; gap: 10px; overflow-x: auto; align-items: flex-start; scroll-snap-type: x proximity;
+}
+.col { flex: 0 0 264px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; scroll-snap-align: start; }
+.col.over { border-color: var(--accent); background: var(--accent-soft); }
+.col-head { margin: 0 0 10px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+.col-head b { font-family: var(--font-data); font-weight: 400; color: var(--muted); }
+.col-body { display: flex; flex-direction: column; gap: 8px; min-height: 48px; }
+.col-empty { margin: 0; font-size: 13px; color: var(--muted); text-align: center; padding: 12px 0; }
+.kcard {
+  font: inherit; text-align: left; cursor: pointer; color: var(--ink); width: 100%;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.kcard:hover { border-color: var(--muted); }
+.kcard.dragging { opacity: 0.45; }
+.kcard strong { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.kmeta { font-size: 13px; color: var(--muted); }
+.knote { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.board-hint { margin: 0; font-size: 13px; color: var(--muted); }
+.people { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.people label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.tag.mgr { border-color: var(--muted); color: var(--ink); }
+.kmgr { font-size: 12px; color: var(--muted); font-weight: 600; }
+/* у каждого менеджера свой цвет: точка на карточке, полоса слева у карточки канбана */
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--muted); vertical-align: baseline; }
+.dot[data-i="0"] { background: var(--sent); } .dot[data-i="1"] { background: var(--warn); } .dot[data-i="2"] { background: var(--accent); }
+.kcard[data-i] { border-left-width: 4px; }
+.kcard[data-i="0"] { border-left-color: var(--sent); } .kcard[data-i="1"] { border-left-color: var(--warn); } .kcard[data-i="2"] { border-left-color: var(--accent); }
+.flag b { font-family: var(--font-data); font-weight: 400; margin-left: 4px; }
+.me-hint { font-size: 13px; color: var(--warn); }
+
+/* overview: the first thing seen in the funnel — numbers, the stage strip, the nearest tasks */
+.overview { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.ov-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.ov-tile { background: var(--bg); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+.ov-tile b { font-family: var(--font-data); font-size: 22px; line-height: 1.2; font-weight: 600; }
+.ov-tile span { font-size: 12px; color: var(--muted); }
+.ov-tile[data-tone="warn"] b { color: var(--warn); }
+.ov-tile[data-tone="stop"] b { color: var(--stop); }
+.ov-tile[data-tone="ok"] b { color: var(--accent); }
+.ov-strip { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); }
+.ov-strip i { display: block; height: 100%; min-width: 3px; }
+.ov-strip i[data-tone="sent"] { background: var(--sent); } .ov-strip i[data-tone="muted"] { background: var(--muted); }
+.ov-strip i[data-tone="ok"] { background: var(--accent); opacity: 0.6; } .ov-strip i[data-tone="warn"] { background: var(--warn); }
+.ov-strip i[data-tone="win"] { background: var(--accent); } .ov-strip i[data-tone="stop"] { background: var(--stop); }
+.ov-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.ov-legend .tag b { font-family: var(--font-data); margin-left: 5px; }
+.ov-conv { margin: 0; font-size: 13px; color: var(--muted); }
+.ov-conv b { font-family: var(--font-data); color: var(--ink); }
+.ov-next { display: flex; flex-direction: column; gap: 6px; }
+.ov-next h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.ov-item { font: inherit; text-align: left; cursor: pointer; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ov-item strong { font-weight: 600; flex: 1 1 160px; overflow-wrap: anywhere; }
+.ov-item .knote { flex-basis: 100%; -webkit-line-clamp: 1; }
+dialog.sheet { border: 0; padding: 0; background: transparent; width: min(820px, 100vw - 16px); max-height: calc(100dvh - 24px); color: var(--ink); }
+dialog.sheet::backdrop { background: rgba(10, 16, 14, 0.55); }
+.sheet-bar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.sheet-bar .btn { background: var(--surface); }
+
+/* send / funnel switch */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.mode { font: inherit; font-weight: 600; cursor: pointer; color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 9px 12px; }
+.mode b { font-family: var(--font-data); font-weight: 400; margin-left: 6px; }
+.mode[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.due-link { font: inherit; font-weight: 600; cursor: pointer; color: var(--warn); background: var(--warn-soft); border: 0; border-radius: 999px; padding: 2px 12px; }
+.due-link b { font-family: var(--font-data); }
+input[type="search"], input[type="datetime-local"] {
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+}
+input[type="search"] { width: 100%; background: var(--surface); }
+input[type="datetime-local"] { font-family: var(--font-data); font-size: 13px; max-width: 100%; }
+
+/* funnel block inside a card */
+.crm { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 12px; }
+.crm-row { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.crm-label { flex-basis: 100%; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+textarea.note { min-height: 0; max-width: 68ch; }
+.due { font-size: 13px; font-weight: 600; color: var(--muted); }
+.due[data-tone="warn"] { color: var(--warn); }
+.due[data-tone="stop"] { color: var(--stop); }
+.hist { margin: 0; font-size: 13px; color: var(--muted); }
+.data-body { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.data-body p { margin: 0; color: var(--muted); font-size: 13px; max-width: 68ch; }
+.empty { margin: 0; padding: 28px 14px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
+.foot { color: var(--muted); font-size: 13px; margin: 0; max-width: 68ch; }
+@media (max-width: 520px) {
+  .phone { margin-left: 0; flex-basis: 100%; }
+  .btn { flex: 1 1 auto; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>WhatsApp-очередь кровельщиков</h1>
+    <p class="lede"><span id="total"></span> кровельных компаний из 2ГИС в двух пачках. В «Рассылке» кнопка открывает чат с готовым текстом, отправляешь его сам. В «Воронке» лежат все, кому уже написал: канбан по этапам, дата следующего контакта и заметка. Кто молчит три дня, сам всплывает в делах на сегодня.</p>
+    <p class="totals">В очереди <b id="c-queue">0</b> · написал <b id="c-sent">0</b> · ответили <b id="c-replied">0</b> · дошли до созвона <b id="c-calls">0</b> · клиентов <b id="c-won">0</b></p>
+  </header>
+
+  <section class="meter" id="meter" aria-live="polite">
+    <div class="meter-row">
+      <span class="today">Сегодня отмечено отправленных: <b id="today">0</b> из <b id="limit-view">15</b></span>
+      <button class="due-link" id="due-link" type="button" hidden>Дела на сегодня: <b id="c-due">0</b></button>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <p class="limit-note" id="limit-note" hidden>Дневной лимит выбран. Остальное лучше отправить завтра.</p>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>Настройки сообщения</summary>
+    <div class="settings-body">
+      <label class="field"><span>Твоё имя</span>
+        <input type="text" id="set-name" autocomplete="off" placeholder="Как представляться">
+      </label>
+      <label class="field"><span>Лимит новых чатов в день</span>
+        <input type="number" id="set-limit" min="1" max="100" step="1">
+      </label>
+      <fieldset>
+        <legend>Демо-сайт под кровлю</legend>
+        <label class="choice"><input type="radio" name="demo" id="set-demo-0" value="0"><span>Ещё не готов. Пишу «могу собрать за вечер»</span></label>
+        <label class="choice"><input type="radio" name="demo" id="set-demo-1" value="1"><span>Готов. Пишу «уже собрал»</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Где открывать чат</legend>
+        <label class="choice"><input type="radio" name="target" id="set-target-wa" value="wa"><span>На телефоне (wa.me)</span></label>
+        <label class="choice"><input type="radio" name="target" id="set-target-web" value="web"><span>На компьютере (WhatsApp Web)</span></label>
+      </fieldset>
+      <label class="choice"><input type="checkbox" id="set-optout"><span>Добавлять строку «Если не актуально — скажите, больше не напишу»</span></label>
+    </div>
+  </details>
+
+  <details class="settings" id="data">
+    <summary>Копия отметок и выгрузка</summary>
+    <div class="data-body">
+      <p>Отметки лежат в этом браузере. Копия нужна, чтобы не потерять их при очистке браузера и чтобы перенести с телефона на компьютер: скачай файл на одном устройстве и загрузи на другом.</p>
+      <div class="actions">
+        <button class="btn" type="button" id="data-export">Скачать копию</button>
+        <button class="btn" type="button" id="data-import">Загрузить копию</button>
+        <button class="btn" type="button" id="data-csv">Выгрузить воронку в таблицу</button>
+        <input type="file" id="data-file" accept="application/json,.json" hidden>
+      </div>
+      <p id="data-note" aria-live="polite"></p>
+    </div>
+  </details>
+
+  <div class="modes" id="modes" role="group" aria-label="Раздел">
+    <button class="mode" data-mode="send" type="button">Рассылка</button>
+    <button class="mode" data-mode="crm" type="button">Воронка<b id="m-crm"></b></button>
+  </div>
+
+  <div class="batches" id="batches" role="group" aria-label="Пачка лидов">
+    <button class="batch" data-batch="1" type="button"><strong>Пачка 1 · Краснодар и край</strong><span>в очереди <b id="b1-queue"></b> из <b id="b1-all"></b></span></button>
+    <button class="batch" data-batch="2" type="button"><strong>Пачка 2 · другие города</strong><span>в очереди <b id="b2-queue"></b> из <b id="b2-all"></b></span></button>
+  </div>
+
+  <nav class="filters" aria-label="Фильтры">
+    <div class="tabs" id="tabs">
+      <button class="tab" data-tab="queue" type="button">Очередь<b id="t-queue"></b></button>
+      <button class="tab" data-tab="sent" type="button">Уже написал<b id="t-sent"></b></button>
+      <button class="tab" data-tab="stop" type="button">Не писать<b id="t-stop"></b></button>
+      <button class="tab" data-tab="all" type="button">Все<b id="t-all"></b></button>
+    </div>
+    <div class="tabs" id="ctabs" hidden>
+      <button class="tab" data-tab="today" type="button">Дела на сегодня<b id="ct-today"></b></button>
+      <button class="tab" data-tab="noreply" type="button">Не ответил<b id="ct-noreply"></b></button>
+      <button class="tab" data-tab="replied" type="button">Ответил<b id="ct-replied"></b></button>
+      <button class="tab" data-tab="work" type="button">Доработать<b id="ct-work"></b></button>
+      <button class="tab" data-tab="callback" type="button">Перезвонить<b id="ct-callback"></b></button>
+      <button class="tab" data-tab="call" type="button">Созвон<b id="ct-call"></b></button>
+      <button class="tab" data-tab="won" type="button">Клиент<b id="ct-won"></b></button>
+      <button class="tab" data-tab="lost" type="button">Отказ<b id="ct-lost"></b></button>
+      <button class="tab" data-tab="sent" type="button">Отправлено, ждём<b id="ct-sent"></b></button>
+      <button class="tab" data-tab="allc" type="button">Все в воронке<b id="ct-allc"></b></button>
+    </div>
+    <div class="people">
+      <label>Я: <select id="set-me" aria-label="Кто работает на этом устройстве"></select></label>
+      <span class="me-hint" id="me-hint" hidden>Выбери себя: лиды, которые отмечаешь, будут записываться на тебя.</span>
+    </div>
+    <div class="flags" id="mgr-chips" role="group" aria-label="Чьи лиды показывать"></div>
+    <section class="overview" id="overview" aria-label="Положение дел" hidden></section>
+    <div class="views" id="views" hidden>
+      <button class="tab" data-view="board" type="button">Канбан</button>
+      <button class="tab" data-view="list" type="button">Список</button>
+    </div>
+    <input type="search" id="q" placeholder="Найти по названию, городу, телефону или заметке" aria-label="Поиск по лидам" autocomplete="off">
+    <div class="flags" id="flags">
+      <button class="flag" data-flag="krd" id="flag-krd" type="button">Только Краснодар и пригороды</button>
+      <select id="set-region" aria-label="Регион пачки 2"></select>
+      <button class="flag" data-flag="nosite" type="button">Только без сайта</button>
+      <button class="flag" data-flag="confirmed" type="button">Только с WhatsApp в карточке</button>
+      <button class="flag" data-flag="notrade" type="button">Скрыть похожих на магазины</button>
+    </div>
+  </nav>
+
+  <p class="board-hint" id="board-hint" hidden>Нажми на карточку, чтобы открыть лида. На компьютере карточки можно перетаскивать между этапами. «Не писать» в канбан не выводится: они во вкладке «Рассылка».</p>
+  <div class="board" id="board" hidden></div>
+  <ol class="queue" id="queue"></ol>
+  <dialog class="sheet" id="sheet" aria-label="Карточка лида">
+    <div class="sheet-bar"><button class="btn" type="button" id="sheet-close">Закрыть</button></div>
+    <ol class="queue" id="sheet-list"></ol>
+  </dialog>
+  <p class="empty" id="empty" hidden>В этом разделе пока пусто.</p>
+
+  <p class="foot">Отметки хранятся в браузере на этом устройстве: на телефоне и на компьютере они разные, переносятся через «Копия отметок и выгрузка». Страница не знает, ушло ли сообщение, поэтому «Отправлено» отмечаешь сам.</p>
+</div>
+
+<script>
+const LEADS = [{"b":1,"n":"Комфорт сервис","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79952262199","c":true,"s":"","r":"4.9","k":279,"g":true,"t":false,"l":true},{"b":1,"n":"Мир кровли","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79184429434","c":true,"s":"","r":"5","k":20,"g":true,"t":false,"l":true},{"b":1,"n":"Дом под ключ","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180702263","c":true,"s":"","r":"4.9","k":9,"g":true,"t":false,"l":true},{"b":1,"n":"Ван","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180999091","c":true,"s":"","r":"5","k":7,"g":true,"t":false,"l":true},{"b":1,"n":"Вентгазнадзор","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79528773239","c":true,"s":"","r":"3.7","k":3,"g":false,"t":false,"l":true},{"b":1,"n":"Первый дом","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79182121617","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Кровля для вас","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79604743388","c":true,"s":"","r":"1","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Монтажная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79531181340","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Ремонт по карману","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79885222323","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Кс","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79002450555","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Автономия","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79284153444","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Жестяной цех","city":"пгт Яблоновский","reg":"Краснодарский край","w":"в Яблоновском","p":"79034495732","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Юнисила-Юг","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79898078818","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Кровмонтажстрой","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79298320555","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Строительно пожарная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180857658","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"КаспийСтрой-Юг","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79885596464","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Крепстрой","city":"ст-ца Новотитаровская","reg":"Краснодарский край","w":"в Новотитаровской","p":"79965322817","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Фараон","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79696603030","c":false,"s":"","r":"5","k":3,"g":true,"t":false,"l":true},{"b":1,"n":"СК Белый ключ","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79186850609","c":false,"s":"","r":"4","k":2,"g":false,"t":false,"l":true},{"b":1,"n":"СтройДом","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79054043088","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Строительная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79282038053","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"КровМонтаж","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79136297117","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Компания по кровельным работам","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79183312345","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Фирма по услугам кровельных работ","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79183839805","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Кровельная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79094605113","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Компания кровельных работ","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79034094281","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Фирма по ремонту кровли","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79184942546","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Компания по кровельным работам","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79307835680","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Выездная строительно-отделочная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79282311953","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Строй-Комфорт","city":"ст-ца Елизаветинская","reg":"Краснодарский край","w":"в Елизаветинской","p":"79384261313","c":true,"s":"ск23.рф","r":"5","k":24,"g":true,"t":false,"l":true},{"b":1,"n":"Domont","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79883882220","c":true,"s":"domontru.ru","r":"4.7","k":19,"g":true,"t":false,"l":true},{"b":1,"n":"Кровельный цех","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79676624699","c":true,"s":"master-krovla.ru","r":"5","k":19,"g":true,"t":false,"l":true},{"b":1,"n":"Мастилит","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79628513538","c":true,"s":"mastilit.ru","r":"5","k":17,"g":true,"t":false,"l":true},{"b":1,"n":"СтройСит","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79892201420","c":true,"s":"stroysit.ru","r":"5","k":14,"g":true,"t":false,"l":true},{"b":1,"n":"DomThermos","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79283326452","c":true,"s":"domthermos.ru","r":"4.9","k":11,"g":true,"t":false,"l":true},{"b":1,"n":"МирСтрой","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79933208200","c":true,"s":"mirstroyrus.ru","r":"5","k":8,"g":true,"t":false,"l":true},{"b":1,"n":"Кубанькровля","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79528631434","c":true,"s":"кубанькровля.рф","r":"5","k":3,"g":true,"t":false,"l":true},{"b":1,"n":"Краснодарская монтажная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180095377","c":true,"s":"кмк23.рф","r":"5","k":2,"g":false,"t":false,"l":true},{"b":1,"n":"Лучший город","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79323212579","c":true,"s":"psklg-dom.ru","r":"5","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Компания по кровельным работам","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79528378003","c":true,"s":"kit-rk.ru","r":"5","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Я.МиС","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79649290666","c":true,"s":"ямис23.рф","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"ВИП-Защита","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79183669547","c":true,"s":"vip-zaschita.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Компания по строительству деревянных домов","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79186264455","c":true,"s":"woodhome23.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Выездная компания","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79788551968","c":true,"s":"solidroof.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Уютный дом","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79286614097","c":true,"s":"уютные-окна.рф","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Продом","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79284644133","c":true,"s":"rskprodom.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Дом фасадов","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79384301900","c":true,"s":"dom-fasadov.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Кровмонтажстрой","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79189384535","c":true,"s":"kms123.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Кристалл-трейд","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79126625255","c":true,"s":"roofdefect.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Строительные системы","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79892919777","c":true,"s":"stroit-systems.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Правильный Выбор","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79384001999","c":true,"s":"www.pravvybor23.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Альянс Про","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79034117047","c":true,"s":"aprosib.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Монолит стандарт","city":"пос. Южный","reg":"Краснодарский край","w":"в посёлке Южном","p":"79892315284","c":true,"s":"стройуслуги23.рф","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Константа","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79034127545","c":true,"s":"krasnodar.rkkb.ru","r":"5","k":6,"g":true,"t":false,"l":true},{"b":1,"n":"Альпатекс","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79233537553","c":false,"s":"krasnodar.alpateks.ru","r":"4.6","k":11,"g":true,"t":false,"l":true},{"b":1,"n":"Горизонты","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79298454508","c":false,"s":"xn--c1aicvcclu5f.xn--p1ai/","r":"5","k":1,"g":false,"t":false,"l":true},{"b":1,"n":"Атм кровля","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79951970121","c":false,"s":"атмкровля.рф","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"СК-ЮГ","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180015594","c":true,"s":"sk-ug23.ru","r":"5","k":158,"g":true,"t":false,"l":true},{"b":1,"n":"Метриястрой","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180778282","c":true,"s":"метриястрой.рф","r":"5","k":46,"g":true,"t":false,"l":true},{"b":1,"n":"СтройСитиГруп","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79951821079","c":true,"s":"remont-scg23.ru/remont-kvartir","r":"4.6","k":38,"g":true,"t":false,"l":true},{"b":1,"n":"Лесобаза N1","city":"аул Козет","reg":"Краснодарский край","w":"в Козете","p":"79055262221","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":true},{"b":1,"n":"Тайфун Краснодар","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79528247982","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":true},{"b":1,"n":"Кровля плюс","city":"ст-ца Динская","reg":"Краснодарский край","w":"в Динской","p":"79189781838","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":true},{"b":1,"n":"Мир кровли","city":"ст-ца Динская","reg":"Краснодарский край","w":"в Динской","p":"79604951262","c":false,"s":"","r":"1.7","k":6,"g":false,"t":true,"l":true},{"b":1,"n":"Термедэкс","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180285011","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":true},{"b":1,"n":"Сибирские фасады","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79282837278","c":true,"s":"sibir-fasad.ru","r":"5","k":3,"g":true,"t":true,"l":true},{"b":1,"n":"Стройкомплект","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79094586888","c":true,"s":"strd.ru","r":"5","k":3,"g":true,"t":true,"l":true},{"b":1,"n":"Металл Нк","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79183153338","c":true,"s":"profnastil-krd.ru","r":"5","k":2,"g":false,"t":true,"l":true},{"b":1,"n":"Торгово-монтажная фирма","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79288843355","c":true,"s":"krovelnaya-masterskaya.pulscen.ru","r":"","k":0,"g":false,"t":true,"l":true},{"b":1,"n":"Торговый дом кровли","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79186999771","c":true,"s":"krovlyakrasnodar.ru","r":"","k":0,"g":false,"t":true,"l":true},{"b":1,"n":"Огнебиозащита","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79039556599","c":true,"s":"ognebiozashhita.ru","r":"5","k":1,"g":false,"t":true,"l":true},{"b":1,"n":"Карат-Плюс","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79189555277","c":true,"s":"karat-p.ru","r":"5","k":56,"g":true,"t":true,"l":true},{"b":1,"n":"Крышовица","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79184623338","c":true,"s":"krysha-krasnodar.ru","r":"5","k":56,"g":true,"t":true,"l":true},{"b":1,"n":"Аира","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79183933233","c":true,"s":"aira23.ru","r":"4.9","k":53,"g":true,"t":true,"l":true},{"b":1,"n":"Domus","city":"Краснодар","reg":"Краснодарский край","w":"в Краснодаре","p":"79180154111","c":true,"s":"sochi.m-300.ru","r":"5","k":48,"g":true,"t":true,"l":true},{"b":1,"n":"Юг","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79180744407","c":true,"s":"","r":"5","k":6,"g":true,"t":false,"l":false},{"b":1,"n":"Фасадный лидер","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79183402658","c":true,"s":"","r":"5","k":3,"g":true,"t":false,"l":false},{"b":1,"n":"Строй М","city":"ст-ца Раевская","reg":"Краснодарский край","w":"в Раевской","p":"79181570944","c":true,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":1,"n":"Рем-Стройка","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79284153261","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"Загородный дом","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79384732984","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"Твоя крепость","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79530721757","c":true,"s":"","r":"1","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"Фирма по кровельным работам","city":"Адыгейск","reg":"Краснодарский край","w":"в Адыгейске","p":"79183636363","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Сеана-строй","city":"пгт Ильский","reg":"Краснодарский край","w":"в Ильском","p":"79183733381","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Строй-Провинция","city":"Усть-Лабинск","reg":"Краснодарский край","w":"в Усть-Лабинске","p":"79184378197","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Юг комфорт строй","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79184684614","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"ГелСтройРемонт","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79286633050","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Юг Строй Кровля","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79384832393","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Стройка и точкА","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79385267194","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Кровельный центр-2000","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79282750452","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"ПромАльпФасад","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79186245322","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Строительно-монтажная компания","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79183680829","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Компания по ремонту и устройству мягкой кровли","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79184529620","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Монтажная компания","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79996383607","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Артель Ладага","city":"с. Супсех","reg":"Краснодарский край","w":"в Супсехе","p":"79184673853","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Альп Юг","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79663477756","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Дом фасадов","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79184745828","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Пенетрон","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79288426343","c":false,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":1,"n":"Промышленный альпинист Перевертин Сергей Сергеевич","city":"с. Супсех","reg":"Краснодарский край","w":"в Супсехе","p":"79094444947","c":false,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":1,"n":"Р-титан","city":"с. Первореченское","reg":"Краснодарский край","w":"в Первореченском","p":"79888885233","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Строительная компания","city":"Крымск","reg":"Краснодарский край","w":"в Крымске","p":"79286646700","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Центр кровельных работ","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79181822299","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Строительно-монтажная компания","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79181650194","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Корпорация СпецСнаб","city":"Темрюк","reg":"Краснодарский край","w":"в Темрюке","p":"79092127111","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Дом кровли","city":"Темрюк","reg":"Краснодарский край","w":"в Темрюке","p":"79184917080","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Стройтранссервис","city":"Адыгейск","reg":"Краснодарский край","w":"в Адыгейске","p":"79265095375","c":true,"s":"stsgeo.ru","r":"4.9","k":20,"g":true,"t":false,"l":false},{"b":1,"n":"Альянсград","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79385452111","c":true,"s":"alliancegrad.ru","r":"5","k":10,"g":true,"t":false,"l":false},{"b":1,"n":"Югстройберег","city":"пос. Пригородный","reg":"Краснодарский край","w":"в посёлке Пригородном","p":"79181868952","c":true,"s":"yugstroibereg.turbo.site","r":"5","k":5,"g":true,"t":false,"l":true},{"b":1,"n":"Стройком","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79288847098","c":true,"s":"www.стройком-дом.рф","r":"5","k":5,"g":true,"t":false,"l":false},{"b":1,"n":"Гел-строй-подряд","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79186487888","c":true,"s":"гел-строй-подряд.рф","r":"5","k":4,"g":true,"t":false,"l":false},{"b":1,"n":"Ваш дом Анапа","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79002369231","c":true,"s":"vashdomanapa.com","r":"5","k":4,"g":true,"t":false,"l":false},{"b":1,"n":"Центр металлокровли","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79284018241","c":true,"s":"evrozabor1.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":1,"n":"АртСтрой","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79282837619","c":true,"s":"artstroy23.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"Асп Югстрой","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79184949720","c":true,"s":"www.asp-yugstroy.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"ДомАрма","city":"ст-ца Гостагаевская","reg":"Краснодарский край","w":"в Гостагаевской","p":"79180546717","c":true,"s":"Domearma.com","r":"5","k":1,"g":false,"t":false,"l":false},{"b":1,"n":"Нювел","city":"пос. Индустриальный","reg":"Краснодарский край","w":"в посёлке Индустриальном","p":"79183725349","c":true,"s":"nyvel.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Housetop","city":"пос. Березовый","reg":"Краснодарский край","w":"в посёлке Берёзовом","p":"79184695050","c":true,"s":"housetop93.ru","r":"","k":0,"g":false,"t":false,"l":true},{"b":1,"n":"Югтехкров","city":"Горячий Ключ","reg":"Краснодарский край","w":"в Горячем Ключе","p":"79094279444","c":true,"s":"utk-group.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Домдачный.рф","city":"Славянск-на-Кубани","reg":"Краснодарский край","w":"в Славянске-на-Кубани","p":"79883548790","c":true,"s":"www.домдачный.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"ГарантСтройГрупп","city":"Славянск-на-Кубани","reg":"Краснодарский край","w":"в Славянске-на-Кубани","p":"79010077799","c":true,"s":"anapa.garantsg.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Хижниковъ","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79881436000","c":true,"s":"Перейти в Telegram-канал","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"ЮгСтройГидроизоляция","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79887698989","c":true,"s":"gidroizolyatsiya.pro","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"ФасадЮгМонтаж","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79180557248","c":true,"s":"pds93.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Cool House","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79182258650","c":true,"s":"fasad-anapa.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"СтройГарантАнапа","city":"Краснодарский край","reg":"Краснодарский край","w":"в Краснодарском крае","p":"79892291333","c":false,"s":"SGA23.ru","r":"4","k":5,"g":false,"t":false,"l":false},{"b":1,"n":"Служба покраски крыш","city":"пгт Тлюстенхабль","reg":"Краснодарский край","w":"в Тлюстенхабле","p":"79282564275","c":false,"s":"pokraska-krysh.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Комфортный дом","city":"Горячий Ключ","reg":"Краснодарский край","w":"в Горячем Ключе","p":"79182596862","c":false,"s":"Перейти в Telegram-канал","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Кровли. Нет","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79883453456","c":false,"s":"krovli.net","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Про Кровля","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79183821224","c":false,"s":"691330.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":1,"n":"Новый дом","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79186678666","c":true,"s":"","r":"4.9","k":16,"g":true,"t":true,"l":false},{"b":1,"n":"Кровля на века","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79184523700","c":true,"s":"","r":"2.7","k":3,"g":false,"t":true,"l":false},{"b":1,"n":"Все для крепежа","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79615076454","c":true,"s":"","r":"5","k":2,"g":false,"t":true,"l":false},{"b":1,"n":"Югмонтаж","city":"Темрюк","reg":"Краснодарский край","w":"в Темрюке","p":"79184671055","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":1,"n":"Фасады Анапы","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79385003254","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":1,"n":"Экспастрой","city":"Геленджик","reg":"Краснодарский край","w":"в Геленджике","p":"79184903812","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Новые технологии полимеров","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79136783561","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Bend","city":"ст-ца Раевская","reg":"Краснодарский край","w":"в Раевской","p":"79182756527","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Юг Монтаж 2009","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79283303284","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Магазин кровельных материалов","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79183943129","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Профиль","city":"Усть-Лабинск","reg":"Краснодарский край","w":"в Усть-Лабинске","p":"79282587667","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Портал","city":"Новороссийск","reg":"Краснодарский край","w":"в Новороссийске","p":"79654644659","c":true,"s":"portalfirma.ru","r":"5","k":3,"g":true,"t":true,"l":false},{"b":1,"n":"Стандарт","city":"Анапа","reg":"Краснодарский край","w":"в Анапе","p":"79189999943","c":true,"s":"standart-krovlya.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":1,"n":"Портал","city":"Абинск","reg":"Краснодарский край","w":"в Абинске","p":"79186644409","c":false,"s":"portalfirma.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Metal_stroi34","city":"Михайловка","reg":"Волгоградская область","w":"в Михайловке","p":"79275032921","c":true,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"РеалКлимат","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79173385855","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Глория","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79053386282","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Новая Линия-Волгоград","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79608824105","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Апофеоз","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377361313","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Инпрострой","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79616647441","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная бригада","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79033763370","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по металлообработке","city":"Краснослободск","reg":"Волгоградская область","w":"в Краснослободске","p":"79195453663","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная компания","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377400044","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Эльба","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79054339782","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строй-инвест","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377119909","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Премиум","city":"рп. Средняя Ахтуба","reg":"Волгоградская область","w":"в Волгоградской области","p":"79047727358","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по кровельным работам","city":"рп. Светлый Яр","reg":"Волгоградская область","w":"в Волгоградской области","p":"79272555653","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Four seasons roofing store","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79601341062","c":true,"s":"","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Кровстав","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79529549083","c":true,"s":"","r":"4.5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Деревянное домостроение","city":"с. Бабяково","reg":"Воронежская область","w":"в Воронежской области","p":"79304093337","c":true,"s":"","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Ефрат","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79805327291","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альянс","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202295792","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельный центр","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79204444999","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ресурс Комплект","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79515405311","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СтройГрад-П","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202296166","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельные российские технологии","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79081423980","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Домстрой","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507509979","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройсервис","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79518538802","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Новая высота","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79304066111","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ДомСтройКомплекс36","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202116578","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройтэп","city":"пос. Солнечный","reg":"Воронежская область","w":"в Воронежской области","p":"79050510004","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"HausDach","city":"с. Ямное","reg":"Воронежская область","w":"в Воронежской области","p":"79997222996","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельно-строительная компания","city":"Россошь","reg":"Воронежская область","w":"в Россоши","p":"79003040775","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по строительным и ремонтным услугам","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79284577359","c":true,"s":"","r":"4.9","k":48,"g":true,"t":false,"l":false},{"b":2,"n":"Компания по изготовлению и монтажу перил из нержавеющей стали и стекла","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79881645889","c":true,"s":"","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Сервис по ремонту крыш","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79996513472","c":true,"s":"","r":"4.4","k":7,"g":false,"t":false,"l":false},{"b":2,"n":"Академия Строительства","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79221516869","c":true,"s":"","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Green-Land","city":"с. Раздольное","reg":"Краснодарский край","w":"в Сочи","p":"79884048283","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"КровляСочи.рф","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79881890616","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ДЭТком","city":"с. Раздольное","reg":"Краснодарский край","w":"в Сочи","p":"79183052390","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Pws Global","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79966483505","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по сварочным работам","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79512623676","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Лист 23","city":"с. Сергей-Поле","reg":"Краснодарский край","w":"в Сочи","p":"79182015976","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Рубель-Строй","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79881462555","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Европарк","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79519014964","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ИзиСтройНН","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200051493","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"МегаДорСтрой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79648311331","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Бруталит","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79040634161","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Трио","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79202533556","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мастер Н","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79601707090","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Вертикаль","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79877496739","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Геострой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79308020208","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройруф","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79308053017","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ЧинПоЧину","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79101416669","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строй-Сервис","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79506066650","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Свой дом","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79108750355","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КС Позитив","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79601805525","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Техинвестстрой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79087345631","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ironwood","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79049090555","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Токата","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79033056706","c":true,"s":"","r":"5","k":19,"g":true,"t":false,"l":false},{"b":2,"n":"Фасадно-кровельный центр","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79625568865","c":true,"s":"","r":"5","k":9,"g":true,"t":false,"l":false},{"b":2,"n":"Три мастера","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79662607040","c":true,"s":"","r":"4.4","k":3,"g":false,"t":false,"l":false},{"b":2,"n":"Ранар","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79870686686","c":true,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"El dacha Home","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600445364","c":true,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Стройдомдвор","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79653716716","c":true,"s":"","r":"4","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Честный дом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79662402016","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"РСК Кратос","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872250518","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Хороший ремонт","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79377701990","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля и Кровельщики","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79274032020","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Новая крыша","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79534896667","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Жестяная мастерская","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79001357836","c":true,"s":"","r":"2.3","k":3,"g":false,"t":false,"l":false},{"b":2,"n":"Южные Вершины","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79281605857","c":true,"s":"","r":"4.7","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Первый дом","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79282703416","c":true,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Альп Гарант","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79514958669","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Теплострой","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79885886994","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альянс","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79185555657","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Служба кровельных работ","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79010001783","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительно-монтажная компания","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79508440769","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Дож строй","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79518387788","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Покров","city":"Новочеркасск","reg":"Ростовская область","w":"в Новочеркасске","p":"79054564044","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Красный молот","city":"Новочеркасск","reg":"Ростовская область","w":"в Новочеркасске","p":"79045056048","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Дон-монтаж","city":"с. Самарское","reg":"Ростовская область","w":"в Ростовской области","p":"79381477082","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ИнженерСтройПлюс","city":"Новочеркасск","reg":"Ростовская область","w":"в Новочеркасске","p":"79281513513","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Домострой","city":"Семикаракорск","reg":"Ростовская область","w":"в Семикаракорске","p":"79518413314","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Вектор развития","city":"пос. Целина","reg":"Ростовская область","w":"в Ростовской области","p":"79281582228","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля плюс","city":"Сальск","reg":"Ростовская область","w":"в Сальске","p":"79188519968","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Пена-Самара.ру","city":"пос. Придорожный","reg":"Самарская область","w":"в Самарской области","p":"79649856701","c":true,"s":"","r":"5","k":5,"g":true,"t":false,"l":false},{"b":2,"n":"Строительное управление №3","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79033003834","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79276593455","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания строительных и ремонтных работ","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79879118102","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ШавринКровля","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79170313136","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ИП Карапетян Т.В.","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79874419040","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по монтажу заборов, ограждений и кровли","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79879187432","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Теплый дом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79171075565","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Руфпрофи63","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79276021999","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Грепвайн","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79879046631","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ТоргСтройДоставка","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79371006063","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Жестяной цех","city":"с. Верхнерусское","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79187562215","c":true,"s":"","r":"5","k":16,"g":true,"t":false,"l":false},{"b":2,"n":"АртСтрой","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79283052997","c":true,"s":"","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"РСО26","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79614947565","c":true,"s":"","r":"4.7","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"ДомСтройСервис","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79064902141","c":true,"s":"","r":"4.5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Надежный Дом СК","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79197364176","c":true,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельная компания","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79682673785","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Центр сварочных работ","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79188725399","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания промышленного альпинизма","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624508099","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Выше Крыши","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79187762666","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Промальп и профстрой","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79283655681","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СтавСтройБизнес","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624539943","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Крофос","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79383333022","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Маляров РемСтрой","city":"Михайловск","reg":"Ставропольский край","w":"в Михайловске","p":"79187415575","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Всё для Кровли","city":"с. Грачевка","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79188852758","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по кровельным работам","city":"Изобильный","reg":"Ставропольский край","w":"в Изобильном","p":"79188861019","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройкровля","city":"с. Обильное","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79187693427","c":true,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Авида Ремстрой","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79023127777","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Фартстрой","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79610659390","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Конкор","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79375519933","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Рус-кроф","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79610662170","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79275283075","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Работа на высоте","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79195441050","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ под ключ","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79033722454","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельно-монтажная компания","city":"х. Захаров","reg":"Волгоградская область","w":"в Волгоградской области","p":"79015971760","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Центр кровельных решений и строительных работ","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377117775","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КР Прогресс-Москва","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79066758332","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79515569935","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"МеталлПрофиль","city":"с. Нижнедевицк","reg":"Воронежская область","w":"в Воронежской области","p":"79202118224","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"СК Март","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79192496365","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"АрхСтройЭксперт","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79155820107","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Юрлайн","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79529568151","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по кровельным работам","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79290110725","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"пос. Отрадное","reg":"Воронежская область","w":"в Воронежской области","p":"79065906965","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельная компания","city":"Борисоглебск","reg":"Воронежская область","w":"в Борисоглебске","p":"79805398613","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Рубикон","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79933088808","c":false,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Кровстрой","city":"с. Барановка (Хостинский)","reg":"Краснодарский край","w":"в Сочи","p":"79511114119","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная компания","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79231255067","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания промышленного альпинизма","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79613010039","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная компания","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79773309070","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по строительству дачных домов и коттеджей","city":"с. Краевско-Армянское","reg":"Краснодарский край","w":"в Сочи","p":"79514146427","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Элитстрой","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79180016642","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"На высоте","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79036066323","c":false,"s":"","r":"1","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"М-строй","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79108783272","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Темп52","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79103956001","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мик-строй","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79527718984","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79535657152","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Технологии качества","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79519046681","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Выездная организация кровельных работ","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79307170010","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ремонтная компания","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200777768","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Krovelshik NN","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79047936965","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Эльтонстрой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79103899187","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Электропроф","city":"д. Пичугино","reg":"Нижегородская область","w":"в Нижегородской области","p":"79087311877","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Баупрофис","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79991997686","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альянс-фк","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79200033901","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Арзамас","reg":"Нижегородская область","w":"в Арзамасе","p":"79202522470","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Эверест","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79868227377","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля+Крепеж","city":"пос. Октябрьский","reg":"Республика Татарстан","w":"в Татарстане","p":"79053765461","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Памир","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79133351777","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ДонСтройФасад","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79198765517","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройдоставка","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79185923144","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Архимед","city":"с. Николаевка","reg":"Ростовская область","w":"в Ростовской области","p":"79287725000","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Промкомплектсервис","city":"Каменск-Шахтинский","reg":"Ростовская область","w":"в Каменске-Шахтинском","p":"79034615465","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Krovla-visota","city":"Каменск-Шахтинский","reg":"Ростовская область","w":"в Каменске-Шахтинском","p":"79508626029","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Объединение кровельщиков г. Сальск","city":"Сальск","reg":"Ростовская область","w":"в Сальске","p":"79081751504","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КупиДом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79608145016","c":false,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Янис","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79371877816","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ФК Строй","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79276858366","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по фасадным и кровельным работам","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79613813060","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройартм","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79277053450","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ремстрой","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272608948","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ск Современник","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270068026","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания кровельных работ","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79171388787","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Фортис-строй Технолоджи","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79277357735","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по услугам высотных работ","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79063428630","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Eurofalz","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79370650302","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Дом Кровли","city":"пгт Алексеевка","reg":"Самарская область","w":"в Самарской области","p":"79277503212","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Батрак","city":"Отрадный","reg":"Самарская область","w":"в Отрадном","p":"79179576766","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СтройДвор","city":"с. Курсавка","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79283186151","c":false,"s":"","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Прохладная крыша 26","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79188653689","c":false,"s":"","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Госткровля","city":"Зеленокумск","reg":"Ставропольский край","w":"в Зеленокумске","p":"79888660300","c":false,"s":"","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Гранд","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79283156315","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Грандстрой-1","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79887673474","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КровляДело","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79283000862","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Sts Grup, студия ландшафтного дизайна","city":"Буденновск","reg":"Ставропольский край","w":"в Будённовске","p":"79097557274","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альфа-металл, центр металлоизделий","city":"Буденновск","reg":"Ставропольский край","w":"в Будённовске","p":"79187502932","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Крышмастер","city":"Буденновск","reg":"Ставропольский край","w":"в Будённовске","p":"79034468884","c":false,"s":"","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройэкогарант","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79610813000","c":true,"s":"Stroimdoma34.ru","r":"5","k":16,"g":true,"t":false,"l":false},{"b":2,"n":"Волжский забор","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79033157331","c":true,"s":"volzhsky-zabor.ru","r":"4.3","k":6,"g":false,"t":false,"l":false},{"b":2,"n":"Скифф","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79616817511","c":true,"s":"tc-ug.ru","r":"5","k":5,"g":true,"t":false,"l":false},{"b":2,"n":"Кирпичный центр","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79197967994","c":true,"s":"kirpcentr.ru","r":"4","k":4,"g":false,"t":false,"l":false},{"b":2,"n":"Прораб 34","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79375393050","c":true,"s":"prorab34.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Выездная служба по ремонту кровли","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79370973761","c":true,"s":"Перейти в Telegram-канал","r":"5","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Бабкина Дача","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79173387600","c":true,"s":"бабкинадача.рф","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Юг Мастер","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79686600999","c":true,"s":"stroimasterug.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ремкровля","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79023632889","c":true,"s":"remkrovla.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строй Монтаж Комплект","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79275077525","c":true,"s":"smk-volga.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"АртБилд","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79061661361","c":true,"s":"artbild2025.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Норма","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79023138632","c":true,"s":"t-krovlya.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ЭкоСтрой","city":"х. Госпитомник","reg":"Волгоградская область","w":"в Волгоградской области","p":"79880100007","c":true,"s":"экострой34.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Матрица","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79275080787","c":true,"s":"gold-kupol.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Волжский забор строй монтаж","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79610909077","c":true,"s":"zabor-vlz.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ММУС","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79375680900","c":true,"s":"mmus.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Дома сип под ключ","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79304290090","c":true,"s":"dspkdom.ru","r":"5","k":21,"g":true,"t":false,"l":false},{"b":2,"n":"ТехноПрофиль","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79066716690","c":true,"s":"tehnoprofill.ru","r":"4.4","k":7,"g":false,"t":false,"l":false},{"b":2,"n":"БизАтмо","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79009627982","c":true,"s":"bizatmo36.ru","r":"5","k":5,"g":true,"t":false,"l":false},{"b":2,"n":"ПГС Недвижимость","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79107498989","c":true,"s":"realtypgsco.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Эверест","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79803466030","c":true,"s":"everestkrov.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Альфа Кровля","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79529594358","c":true,"s":"alfaroof.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Фасадно-кровельный центр","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202299258","c":true,"s":"f-kc.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Сипгрупп","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202017700","c":true,"s":"sksipgroup.ru/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СтройМонтаж","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79100416142","c":true,"s":"avsdom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Профэкспертсервис","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79204444575","c":true,"s":"profexp-vrn.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Регион","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79805539085","c":true,"s":"skrvrn.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Прайм Ппу","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79152180163","c":true,"s":"voronezh.poliuretan-ppu.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Атларус","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507621294","c":true,"s":"atlarus.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мирас-строй","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507504596","c":true,"s":"vezem-36.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Stelldom","city":"пос. Отрадное","reg":"Воронежская область","w":"в Воронежской области","p":"79300110026","c":true,"s":"stelldom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Гидро36","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79515412741","c":true,"s":"gidro36.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровцентр","city":"рп. Рамонь","reg":"Воронежская область","w":"в Воронежской области","p":"79204273156","c":true,"s":"центр-кров.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ТвойЭкоДом","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79882351260","c":true,"s":"твойэкодом.рф","r":"5","k":21,"g":true,"t":false,"l":false},{"b":2,"n":"Топ фасад","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79884114871","c":true,"s":"topfasadgroup.ru","r":"5","k":18,"g":true,"t":false,"l":false},{"b":2,"n":"Корпорация Тахион","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79111927777","c":true,"s":"tachyon-stroi.ru","r":"5","k":9,"g":true,"t":false,"l":false},{"b":2,"n":"Полигид","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79284526464","c":true,"s":"poligid.com","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Мега-строй","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79189131000","c":true,"s":"www.megastroisochi.ru","r":"3.7","k":6,"g":false,"t":false,"l":false},{"b":2,"n":"На Высоте","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79628889771","c":true,"s":"navisotesochi.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Realstroy","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79184012695","c":true,"s":"kladka24-sochi.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Аксиома","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79530916161","c":true,"s":"www.axioma93.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"3-Б групп","city":"с. Орел-Изумруд","reg":"Краснодарский край","w":"в Сочи","p":"79884090055","c":true,"s":"3bgroup.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Промат Групп","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79372322222","c":true,"s":"Перейти в Telegram-канал","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Вск","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79284569616","c":true,"s":"vsc-sochi.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СоПрофф","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79882347555","c":true,"s":"soproff.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровби","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79189047735","c":true,"s":"krovbe.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альтеза-Альп","city":"Туапсе","reg":"Краснодарский край","w":"в Туапсе","p":"79516120859","c":true,"s":"altezaalp.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Именитая изба","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79100077779","c":true,"s":"izba-52.ru","r":"5","k":27,"g":true,"t":false,"l":false},{"b":2,"n":"Чистый век","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79506093148","c":true,"s":"pure-century.ru","r":"5","k":17,"g":true,"t":false,"l":false},{"b":2,"n":"Быстро Ремонт","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79290536046","c":true,"s":"bystro-remont.ru","r":"5","k":13,"g":true,"t":false,"l":false},{"b":2,"n":"Столица крыш","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79159493786","c":true,"s":"vseposmete.com","r":"4.7","k":13,"g":true,"t":false,"l":false},{"b":2,"n":"Компания по кровельному и фасадному сервису","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79535566000","c":true,"s":"kfservis.ru","r":"5","k":7,"g":true,"t":false,"l":false},{"b":2,"n":"Фазенда","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79290380322","c":true,"s":"www.fazendann.ru","r":"1.8","k":5,"g":false,"t":false,"l":false},{"b":2,"n":"Мостион","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79063668808","c":true,"s":"mostion.ru","r":"5","k":5,"g":true,"t":false,"l":false},{"b":2,"n":"Вершина","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79302831121","c":true,"s":"fasad-vershina.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Проминвест","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79030531337","c":true,"s":"www.prominvestnn.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Верхотура","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79527728032","c":true,"s":"verhoturann.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"ТвойСтройБор","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79871108192","c":true,"s":"tvoystroybor.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Билдэко","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79334203355","c":true,"s":"bldco.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"НСК Град","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79534154044","c":true,"s":"nsk-grad.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Астра","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200239894","c":true,"s":"sk-astra.ru","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Умное решение","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200133789","c":true,"s":"smartroof.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Нанофлекс","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79524405722","c":true,"s":"nanofleks.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Домовой 52","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79092957997","c":true,"s":"52krov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Феникс","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79108817770","c":true,"s":"fenix-work2021.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Юнибилд","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79036043536","c":true,"s":"юнибилд.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Грол-НН","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79290538773","c":true,"s":"ппу52.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"АСП дом","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79047905015","c":true,"s":"acpdom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Салон кровли и фасада","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79063634455","c":true,"s":"salonkif.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СК Рада","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79107902858","c":true,"s":"cmd-dom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Проектстройнн","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79023020066","c":true,"s":"proektstroynn.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Новострой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79306655285","c":true,"s":"novostroy.space","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Диалтоп","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79103908000","c":true,"s":"dialtop.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"А-строй","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79519176054","c":true,"s":"fasadnnov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Меридиан","city":"Ждановский","reg":"Нижегородская область","w":"в Нижегородской области","p":"79200179415","c":true,"s":"кровля52.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Грандстрой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79534153043","c":true,"s":"строим52.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"СкифСтрой","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79200085168","c":true,"s":"skif-stroy.com","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Изба-НН","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79306676624","c":true,"s":"sk-izba.com","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ТИМ","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79200427604","c":true,"s":"domaizblokov52.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Древо-Style","city":"с. Алешково","reg":"Нижегородская область","w":"в Нижегородской области","p":"79308034302","c":true,"s":"www.drevo-bg.ru/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Технология","city":"Арзамас","reg":"Нижегородская область","w":"в Арзамасе","p":"79506198202","c":true,"s":"кровля.технология52.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Рыбачий","city":"Новосибирская область","reg":"Новосибирская область","w":"в Новосибирской области","p":"79994651611","c":true,"s":"rybachi.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Arma строй","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79274905858","c":true,"s":"арма-строй.рф","r":"5","k":27,"g":true,"t":false,"l":false},{"b":2,"n":"Продом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600485984","c":true,"s":"pro-dom116.ru","r":"4.8","k":21,"g":true,"t":false,"l":false},{"b":2,"n":"Грейстоун","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79370067808","c":true,"s":"казань.грейстоун.рф","r":"4.8","k":20,"g":true,"t":false,"l":false},{"b":2,"n":"Кедр","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79662401954","c":true,"s":"www.kedrdoma.ru","r":"4.8","k":17,"g":true,"t":false,"l":false},{"b":2,"n":"Киндом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79196493313","c":true,"s":"kingdom16.ru","r":"4.8","k":16,"g":true,"t":false,"l":false},{"b":2,"n":"Флагман","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79172432069","c":true,"s":"pokroem.com","r":"5","k":15,"g":true,"t":false,"l":false},{"b":2,"n":"Идея","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79046752853","c":true,"s":"Идеястроит.рф","r":"4.1","k":13,"g":false,"t":false,"l":false},{"b":2,"n":"Nako Строим","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79093099981","c":true,"s":"nakogroup.ru","r":"5","k":10,"g":true,"t":false,"l":false},{"b":2,"n":"Новая Высота","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79033057082","c":true,"s":"novv116.ru","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Дома.Рт","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600776600","c":true,"s":"domart.tatar","r":"5","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"ТехСтрой","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79196296337","c":true,"s":"texstroi.com","r":"5","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"Тёплый Дом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79276770277","c":true,"s":"tepliy-dom116.ru","r":"4","k":5,"g":false,"t":false,"l":false},{"b":2,"n":"Седьмое небо","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79196472929","c":true,"s":"sk-7nebo.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Волга-Альп","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79625535098","c":true,"s":"volga-alp.ru","r":"4","k":4,"g":false,"t":false,"l":false},{"b":2,"n":"Сайдинг Казань","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79503188454","c":true,"s":"Перейти в Telegram-канал","r":"5","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Ремстройактив","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79033051704","c":true,"s":"sub-comfort.ru","r":"3","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Гратек плюс","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79375235123","c":true,"s":"gratech.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Скаткров","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600451100","c":true,"s":"skatkrov.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Гратодом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872900797","c":true,"s":"gratobrus.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Счастливый дом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79178648469","c":true,"s":"Перейти в Telegram-канал","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Roof Development","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79393726007","c":true,"s":"rdkazan.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Альянс Ст","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79503277536","c":true,"s":"ast-st.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Руфмастер","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79510632888","c":true,"s":"roofmaster-kazan.ru/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Универсал строй","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79172857095","c":true,"s":"yniversalstroi.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Юг-кровля","city":"пос. Верхнетемерницкий","reg":"Ростовская область","w":"в Ростовской области","p":"79282705816","c":true,"s":"yug-krovlyarostov.ru","r":"4.8","k":24,"g":true,"t":false,"l":false},{"b":2,"n":"Тандем","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79110743258","c":true,"s":"montazh-krysha.ru/","r":"4.7","k":13,"g":true,"t":false,"l":false},{"b":2,"n":"Первая Честная Строительная Компания","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79281864448","c":true,"s":"пчск.рф","r":"4.8","k":12,"g":true,"t":false,"l":false},{"b":2,"n":"Ремолл","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79286000110","c":true,"s":"remall.design","r":"4.7","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Зодчий дом","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79613020775","c":true,"s":"зодчий-дом.рф","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"Кровля Юга","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79518484843","c":true,"s":"www.krovlya-yuga.ru","r":"5","k":5,"g":true,"t":false,"l":false},{"b":2,"n":"СтройДомСад","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79185873397","c":true,"s":"strojdomsad.clients.site/","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Кровля Ростов","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79061825114","c":true,"s":"кровля-ростов.рф","r":"3","k":3,"g":false,"t":false,"l":false},{"b":2,"n":"Пенетрон","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79515267499","c":true,"s":"гидроизоляция161.рф/","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Спецзащита","city":"Аксай","reg":"Ростовская область","w":"в Аксае","p":"79525695595","c":true,"s":"www.vector-s.ru","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Стройдом","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79010066555","c":true,"s":"stroidom-rostov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная фирма Галс","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79895111472","c":true,"s":"sfgals.ru/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мирман Компани","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79054535484","c":true,"s":"mirmancompany.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Deluxe","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79185549042","c":true,"s":"xn--b1adduaedwri5lta.xn--p1ai/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельщик Дона","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79614101452","c":true,"s":"krovelshik-dona.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Дом под ключ","city":"Батайск","reg":"Ростовская область","w":"в Батайске","p":"79613011150","c":true,"s":"гк-домподключ.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Монолит","city":"Новочеркасск","reg":"Ростовская область","w":"в Новочеркасске","p":"79381799909","c":true,"s":"monolit-n-161.ru/","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля Металл","city":"Сальск","reg":"Ростовская область","w":"в Сальске","p":"79889989041","c":true,"s":"krovlya-metall-salsk.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мкн","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272608704","c":true,"s":"www.mk-house.ru","r":"5","k":8,"g":true,"t":false,"l":false},{"b":2,"n":"ДСК63","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79608314950","c":true,"s":"dsk63.ru","r":"5","k":7,"g":true,"t":false,"l":false},{"b":2,"n":"Сервис по строительству и ремонту","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79053032266","c":true,"s":"кровля163.рф","r":"5","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"Сск-дом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79372033637","c":true,"s":"сск-дом.рф","r":"4.7","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"Профилен","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270042092","c":true,"s":"profilen163.ru","r":"5","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"Технострой","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79033035656","c":true,"s":"tehnostroydom.ru","r":"3.4","k":5,"g":false,"t":false,"l":false},{"b":2,"n":"Волга дом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79276910202","c":true,"s":"волга-дом.рус","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Авангард","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79277486868","c":true,"s":"skavangard63.ru","r":"5","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Фасад","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79033000392","c":true,"s":"fasad-samara.ru","r":"5","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Волга-мастер","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79879897485","c":true,"s":"domik163.ru","r":"3","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Дачный дом 63","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79083933811","c":true,"s":"dachnyi-dom.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Mspro ltd","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79879092938","c":true,"s":"mspro-ltd.ru","r":"4","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Высота","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79170111244","c":true,"s":"alp63.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Кровмастер","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272071202","c":true,"s":"krovlymaster.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Аляска","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270072907","c":true,"s":"alyaskastroi.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Центр современной кровли","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270014104","c":true,"s":"www.krovly.ru","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"ДомаСтроим","city":"пос. Подстепновка","reg":"Самарская область","w":"в Самарской области","p":"79874472579","c":true,"s":"domastroim63.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Slom-house","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270292777","c":true,"s":"slom-house.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Европейские технологии и строительство","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272673742","c":true,"s":"ets43.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля групп","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79376254118","c":true,"s":"samara.krovlyaural.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по гидроизоляции крыш и фундамента","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79376464151","c":true,"s":"gidroizol63.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Аспект","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270010167","c":true,"s":"aspectsk.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Скандинав","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79178170187","c":true,"s":"scandinav63.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Диана-Самара","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79276921455","c":true,"s":"ds163.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Основасити","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79682680180","c":true,"s":"sk-osnova26.ru/","r":"5","k":29,"g":true,"t":false,"l":false},{"b":2,"n":"Альянс-Групп","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79064709823","c":true,"s":"988818.ru","r":"4.9","k":7,"g":true,"t":false,"l":false},{"b":2,"n":"Авангард-СК","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624463146","c":true,"s":"avangardsk26.ru","r":"5","k":7,"g":true,"t":false,"l":false},{"b":2,"n":"Ставрополь-Фасад","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79956065132","c":true,"s":"stavropol-fasad.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Михайловский кровельный центр","city":"Михайловск","reg":"Ставропольский край","w":"в Михайловске","p":"79624465695","c":true,"s":"sk-metremstroi.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Всероссийское добровольное пожарное общество","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79018690820","c":true,"s":"stvdpo.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Реал","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624448845","c":true,"s":"реал26.рф","r":"1","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Каркасные дома","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624468161","c":true,"s":"karkassip.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"СтройАльп","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79683347814","c":true,"s":"www.стройальп26.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ecoteplo26","city":"х. Вязники","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79624443099","c":true,"s":"ecoteplo26.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ВолгаСтрой","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79956639032","c":false,"s":"volgostroy.tilda.ws","r":"5","k":6,"g":true,"t":false,"l":false},{"b":2,"n":"Bolat Group","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79616895479","c":false,"s":"volgograd.zabor-zhaluzi.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"СтройДомТоп","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79608866469","c":false,"s":"stroy-dom34.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Компания по выполнению кровельных работ","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79610757525","c":false,"s":"vk.link/remont_krovli_volgograd","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КровГид","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79921481355","c":false,"s":"кровгид.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Забор Строй Монтаж","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79696556511","c":false,"s":"34stroika.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Сталь Сервис","city":"Новоаннинский","reg":"Волгоградская область","w":"в Новоаннинском","p":"79026551122","c":false,"s":"novoanninskiy.metall-proff.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровля и забор","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79805489555","c":false,"s":"krovlya-i-zabor.ru","r":"4.8","k":18,"g":true,"t":false,"l":false},{"b":2,"n":"Kintek","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79155463221","c":false,"s":"Перейти в Telegram-канал","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Сталь сервис","city":"Борисоглебск","reg":"Воронежская область","w":"в Борисоглебске","p":"79204488811","c":false,"s":"metall-proff.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Праймстарт","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507707171","c":false,"s":"primestartvrn.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Строительный Мир","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79920579700","c":false,"s":"project20730136.tilda.ws","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ТехКров","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79527535205","c":false,"s":"techkrov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ДмитрийСтрой","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79601096909","c":false,"s":"дмитрий-строй-воронеж.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ЭкоДром","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79956209995","c":false,"s":"ekodrom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Монтажная компания","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507659331","c":false,"s":"www.кровляврн.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"АРС-Строй","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79204247011","c":false,"s":"stroim-vmeste36.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ckrov.ru","city":"Россошь","reg":"Воронежская область","w":"в Россоши","p":"79304120020","c":false,"s":"ckrov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Оригинал","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79881564660","c":false,"s":"original-sk.ru/","r":"5","k":3,"g":true,"t":false,"l":false},{"b":2,"n":"Арт&Дом","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79284537806","c":false,"s":"artdom-stroi.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Профи-Строй","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79189072229","c":false,"s":"profi-stroj.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Stroy system","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79108752508","c":false,"s":"ssystem52.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Вертикаль НН","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79107904804","c":false,"s":"вертикаль-нн.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Tpo&Epdm","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79917501580","c":false,"s":"tpoepdm.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строй Забор","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79040456364","c":false,"s":"montag-zaborov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Демстройремонт","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79100077775","c":false,"s":"демстройремонт.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Капремстрой","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79202506479","c":false,"s":"nnkapital.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ИГМ","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79103965935","c":false,"s":"stk-igm.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Авангард-РС","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200485255","c":false,"s":"www.avangard-rs.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ГК Эталон","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79092906898","c":false,"s":"гидроизоляция52.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Grand line","city":"Арзамас","reg":"Нижегородская область","w":"в Арзамасе","p":"79200242464","c":false,"s":"grandline.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Туйчин","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600661233","c":false,"s":"tuichin.ru","r":"5","k":16,"g":true,"t":false,"l":false},{"b":2,"n":"Эни-Дом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79870083642","c":false,"s":"Перейти в Telegram-канал","r":"5","k":9,"g":true,"t":false,"l":false},{"b":2,"n":"КазДомСтрой","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872975733","c":false,"s":"kazdomstroy.ru","r":"5","k":4,"g":true,"t":false,"l":false},{"b":2,"n":"Верховик","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600350357","c":false,"s":"verkhovikazani.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Татальп","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79625595853","c":false,"s":"tatalp.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Амиритстрой","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79869196797","c":false,"s":"Amiritstroi.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Издревстрой","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872301350","c":false,"s":"izdrevstroy.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"КровляКазань","city":"Зеленодольск","reg":"Республика Татарстан","w":"в Зеленодольске","p":"79625566790","c":false,"s":"казань-кровля.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительный Бутик","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79281151112","c":false,"s":"stroybutik-metallprofil.ru","r":"3.7","k":3,"g":false,"t":false,"l":false},{"b":2,"n":"Эстетик Групп","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79515241100","c":false,"s":"estetik-grupp.tilda.ws","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Ростов кровля","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79381048015","c":false,"s":"www.rostov-krovlya.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Dm","city":"Батайск","reg":"Ростовская область","w":"в Батайске","p":"79185553957","c":false,"s":"www.61стройдом.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мастер Кров","city":"Азов","reg":"Ростовская область","w":"в Азове","p":"79185609931","c":false,"s":"master-krov.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кровельная компания","city":"Новочеркасск","reg":"Ростовская область","w":"в Новочеркасске","p":"79525833344","c":false,"s":"stroikrovli.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строительная компания","city":"Миллерово","reg":"Ростовская область","w":"в Миллерово","p":"79054853032","c":false,"s":"krovlya-millerovo.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Строй Дом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79397077088","c":false,"s":"samara.stroitelstvo-domov-pod-klyuch.ru","r":"4.2","k":10,"g":false,"t":false,"l":false},{"b":2,"n":"Ладар","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272900119","c":false,"s":"кровляпвх.рф","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Альпинистский сервис пик","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79053026150","c":false,"s":"www.alpservis-pik.ru","r":"5","k":2,"g":false,"t":false,"l":false},{"b":2,"n":"Вико","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79053000247","c":false,"s":"viko-stroysmr.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Водосток 63","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79613877496","c":false,"s":"vodostok63.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"Дом Плюс","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79171640564","c":false,"s":"domplus24.ru","r":"5","k":1,"g":false,"t":false,"l":false},{"b":2,"n":"РСК Средняя Волга","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272603202","c":false,"s":"rsk-sv.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Nippon ace","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79376566556","c":false,"s":"nipponace.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Надёжный дом","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79934621529","c":false,"s":"ck-63.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Кайзер Строй","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79966255350","c":false,"s":"kaiserstroi.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Элиткров","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79376502078","c":false,"s":"elitekrov63.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Коттедж-стройколор","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79170361888","c":false,"s":"коттеджстройколор.рф","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"ЭлитМастерс","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79956641635","c":false,"s":"elit-naves.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Dream House","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79278910080","c":false,"s":"www.dreamhouse63.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Стройград","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79272037373","c":false,"s":"Перейти в Telegram-канал","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Югкомсервис","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79283020074","c":false,"s":"metalltorg.tb.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Памир","city":"Изобильный","reg":"Ставропольский край","w":"в Изобильном","p":"79620239006","c":false,"s":"kanadskyi-dom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Памир","city":"Изобильный","reg":"Ставропольский край","w":"в Изобильном","p":"79188026111","c":false,"s":"kanadskyi-dom.ru","r":"","k":0,"g":false,"t":false,"l":false},{"b":2,"n":"Мастер дом 36","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79529582116","c":true,"s":"мастер-дом36.рф","r":"5","k":162,"g":true,"t":false,"l":false},{"b":2,"n":"Строительная компания Древо","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79527836469","c":true,"s":"skdrevo.ru","r":"4.9","k":76,"g":true,"t":false,"l":false},{"b":2,"n":"Строим дом мечты","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872988695","c":true,"s":"sdmkarkas.ru","r":"5","k":170,"g":true,"t":false,"l":false},{"b":2,"n":"Арлана","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79662505255","c":true,"s":"арлана.рф","r":"5","k":39,"g":true,"t":false,"l":false},{"b":2,"n":"ТермоХаус","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600806086","c":true,"s":"www.tmhs.ru","r":"5","k":35,"g":true,"t":false,"l":false},{"b":2,"n":"Вавилон Групп","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79050206060","c":true,"s":"vavilonkazan.ru","r":"4.9","k":31,"g":true,"t":false,"l":false},{"b":2,"n":"Мирай","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79526008000","c":true,"s":"www.mirai161.ru/","r":"4.9","k":39,"g":true,"t":false,"l":false},{"b":2,"n":"Вектра","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79270168963","c":true,"s":"vektragroup.ru","r":"4.5","k":185,"g":true,"t":false,"l":false},{"b":2,"n":"Солнечный терем","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79307088833","c":false,"s":"sterem.ru","r":"5","k":38,"g":true,"t":false,"l":false},{"b":2,"n":"Brickwood","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79659921616","c":false,"s":"brkwood.ru/","r":"4.5","k":108,"g":true,"t":false,"l":false},{"b":2,"n":"Денкор Строй","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79616668506","c":true,"s":"","r":"4.6","k":55,"g":true,"t":true,"l":false},{"b":2,"n":"Производственно-монтажная компания","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79876479413","c":true,"s":"","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"Смарт кровля","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79616894408","c":true,"s":"","r":"3","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"Все для кровли и фасада","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79050625295","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Евробилд","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377189444","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кв Плюс","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79177256000","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Строй-контент","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79275007423","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Лидер+","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79518656176","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Тм","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79081483280","c":true,"s":"","r":"1","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Гидрокор","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79003016193","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кров-комплект","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79507782928","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Донворот","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79065859594","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Protan","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79049700036","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровляэксперт","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79282162411","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Неоруф","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79524551614","c":true,"s":"","r":"4.5","k":4,"g":true,"t":true,"l":false},{"b":2,"n":"Дзержинский центр кровли","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79200109860","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Югус-НН","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79519035252","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Талер","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79107949057","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Экохимстрой","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79036042354","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Ирга","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79023041695","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровля Плюс","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79200190466","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Арис","city":"Дзержинск","reg":"Нижегородская область","w":"в Дзержинске","p":"79036055733","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Стройград","city":"Арзамас","reg":"Нижегородская область","w":"в Арзамасе","p":"79101076259","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровля всем","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79272494120","c":true,"s":"","r":"1","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Скиф","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79872979101","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Фидэм","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79600487748","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Теплый дом","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79046601973","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровля Центр","city":"Азов","reg":"Ростовская область","w":"в Азове","p":"79281049854","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Торговая компания обогрева кабельных систем","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79277253885","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Гарант Металл","city":"Михайловск","reg":"Ставропольский край","w":"в Михайловске","p":"79624392944","c":true,"s":"","r":"2.6","k":16,"g":false,"t":true,"l":false},{"b":2,"n":"Компания по производству и продаже кровельных материалов","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79286531868","c":true,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Сим","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79187470054","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Надёжная Кровля","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79289369828","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Ермак","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79188663799","c":true,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Оптовая база","city":"Николаевск","reg":"Волгоградская область","w":"в Николаевске","p":"79377181565","c":false,"s":"","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Кронал","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79377344571","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Металлопрофиль","city":"Россошь","reg":"Воронежская область","w":"в Россоши","p":"79507569166","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Саврос","city":"Россошь","reg":"Воронежская область","w":"в Россоши","p":"79204033377","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Производственная компания","city":"Россошь","reg":"Воронежская область","w":"в Россоши","p":"79102493739","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Теплый кров","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79108808884","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Окна&Двери","city":"рп. Ардатов","reg":"Нижегородская область","w":"в Нижегородской области","p":"79047820158","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Руф Глобал Групп","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79168799059","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Первая Кровельная Компания","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79081789000","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровля Плюс","city":"Миллерово","reg":"Ростовская область","w":"в Миллерово","p":"79185050533","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Первая кровельная компания","city":"Миллерово","reg":"Ростовская область","w":"в Миллерово","p":"79885617561","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Дом Крыша","city":"Изобильный","reg":"Ставропольский край","w":"в Изобильном","p":"79054411338","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Гарант Металл","city":"с. Красногвардейское","reg":"Ставропольский край","w":"в Ставропольском крае","p":"79624465494","c":false,"s":"","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"КронТех","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79889643033","c":true,"s":"kronteh.ru","r":"5","k":5,"g":true,"t":true,"l":false},{"b":2,"n":"Высотаремстрой","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79173389342","c":true,"s":"vysota-rs.ru","r":"4.1","k":4,"g":false,"t":true,"l":false},{"b":2,"n":"Торговая Компания Вальма","city":"Волжский","reg":"Волгоградская область","w":"в Волжском","p":"79053949790","c":true,"s":"valma-tc.ru","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Билдж","city":"Волгоград","reg":"Волгоградская область","w":"в Волгограде","p":"79610587303","c":true,"s":"bildj-v.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Rks klinker","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79003088636","c":true,"s":"воронеж.реконстрой.рф/","r":"3.6","k":13,"g":false,"t":true,"l":false},{"b":2,"n":"Айко","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79009529286","c":true,"s":"www.aiko36.ru","r":"4.8","k":6,"g":true,"t":true,"l":false},{"b":2,"n":"Кровля-вк","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79202142463","c":true,"s":"karton-ruberoid.ru","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"ТехноКровля","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79038588333","c":true,"s":"roof36.ru/","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Ск стройинвест","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79527538630","c":true,"s":"36stroy.ru","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Академия","city":"Воронеж","reg":"Воронежская область","w":"в Воронеже","p":"79204252387","c":true,"s":"vegliviy-alpinist.ru","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Мастерпласт","city":"Сочи","reg":"Краснодарский край","w":"в Сочи","p":"79202539337","c":true,"s":"masterplast.pro","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Мастерпласт","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79200734337","c":true,"s":"masterplast.pro","r":"5","k":26,"g":true,"t":true,"l":false},{"b":2,"n":"Аксдом","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79307111188","c":true,"s":"aksdom.ru","r":"4.4","k":7,"g":false,"t":true,"l":false},{"b":2,"n":"Алми-Кров","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79524513768","c":true,"s":"almi-krov.ru","r":"5","k":6,"g":true,"t":true,"l":false},{"b":2,"n":"Глобус","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79302839991","c":true,"s":"globus-gk.ru","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"КровСистем","city":"Бор","reg":"Нижегородская область","w":"в городе Бор","p":"79527850404","c":true,"s":"krovsystem-bor.ru","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"Теплоплюс","city":"Арзамас","reg":"Нижегородская область","w":"в Арзамасе","p":"79990792499","c":true,"s":"teploplus52.ru","r":"","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"Лесной терем-НН","city":"Нижний Новгород","reg":"Нижегородская область","w":"в Нижнем Новгороде","p":"79519080648","c":true,"s":"www.lesterem.ru","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Вента","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79677722403","c":true,"s":"ventasteel.ru","r":"5","k":15,"g":true,"t":true,"l":false},{"b":2,"n":"Стройсталь","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79376153243","c":true,"s":"www.stroistal116.ru","r":"4.6","k":10,"g":true,"t":true,"l":false},{"b":2,"n":"Тк троя","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79178814122","c":true,"s":"troya-tk.ru","r":"5","k":8,"g":true,"t":true,"l":false},{"b":2,"n":"Арт уют","city":"Казань","reg":"Республика Татарстан","w":"в Казани","p":"79033133421","c":true,"s":"art-uiut.ru","r":"5","k":1,"g":false,"t":true,"l":false},{"b":2,"n":"Магазин стройматериалов","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79286001737","c":true,"s":"stroymatrnd.ru/","r":"5","k":14,"g":true,"t":true,"l":false},{"b":2,"n":"Дом Фасадов","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79281321212","c":true,"s":"dom-fasadov.ru","r":"5","k":11,"g":true,"t":true,"l":false},{"b":2,"n":"Гранд Кровля","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79282126226","c":true,"s":"grandkrovlya.ru","r":"5","k":5,"g":true,"t":true,"l":false},{"b":2,"n":"Высотаремстрой","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79023821767","c":true,"s":"www.vysota-rs.ru","r":"5","k":3,"g":true,"t":true,"l":false},{"b":2,"n":"Точка Кровли","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79885329960","c":true,"s":"tkrovli.ru/","r":"4","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"ДиП кровля","city":"х. Ленинаван","reg":"Ростовская область","w":"в Ростовской области","p":"79282797921","c":true,"s":"2797921.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"ДомСтрой","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79282963312","c":true,"s":"dom-stroy161.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кровля ЛД","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79185562027","c":true,"s":"krovlya-ld.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Стройтехмонтаж","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79282969397","c":true,"s":"montajkrovli.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Профи Дом","city":"Ростов-на-Дону","reg":"Ростовская область","w":"в Ростове-на-Дону","p":"79612952626","c":true,"s":"www.profidom61.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Кронос","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79277871530","c":true,"s":"kronos-samara.ru","r":"4.9","k":27,"g":true,"t":true,"l":false},{"b":2,"n":"Пантеон","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79033013494","c":true,"s":"panteon63.ru","r":"5","k":9,"g":true,"t":true,"l":false},{"b":2,"n":"Абв-Созидание","city":"Самара","reg":"Самарская область","w":"в Самаре","p":"79053046989","c":true,"s":"abv-sozidanie.ru","r":"5","k":4,"g":true,"t":true,"l":false},{"b":2,"n":"Все для кровли и фасада","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624417565","c":true,"s":"www.stav-krisha.ru","r":"4.5","k":15,"g":true,"t":true,"l":false},{"b":2,"n":"ТехноКровля","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79682665638","c":true,"s":"www.t-krovlya.ru","r":"3.9","k":7,"g":false,"t":true,"l":false},{"b":2,"n":"КровляPro","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79614650666","c":true,"s":"krovlyapro26.ru/","r":"5","k":4,"g":true,"t":true,"l":false},{"b":2,"n":"МелКроф","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79034426941","c":true,"s":"Melkrof.ru","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"Магазин кровельных материалов","city":"Михайловск","reg":"Ставропольский край","w":"в Михайловске","p":"79054443536","c":true,"s":"krovlisk.ru","r":"5","k":2,"g":false,"t":true,"l":false},{"b":2,"n":"ГидроPro","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79624506088","c":true,"s":"gidropro26.ru","r":"","k":0,"g":false,"t":true,"l":false},{"b":2,"n":"Компания по продаже кровельных материалов, фасадов и заборов","city":"Ставрополь","reg":"Ставропольский край","w":"в Ставрополе","p":"79188004424","c":true,"s":"metallprofil26.ru","r":"","k":0,"g":false,"t":true,"l":false}];
+const KEY = 'wa-roof-krd-v1';
+const OPT = 'Если не актуально — скажите, больше не напишу.';
+const OPEN_GOOD = [
+  'Искал в 2ГИС кровельные компании {w} и наткнулся на вас: отзывы хорошие, а сайта нет.',
+  'Смотрел в 2ГИС, кто делает кровлю {w}. У «{n}» хорошие отзывы, но сайта в карточке я не нашёл.',
+  'Нашёл вас в 2ГИС среди кровельных компаний {w}: оценки высокие, а сайта нет.'
+];
+const OPEN_PLAIN = [
+  'Искал в 2ГИС кровельные компании {w} и наткнулся на вас. Сайта в карточке не увидел.',
+  'Смотрел в 2ГИС, кто делает кровлю {w}, и нашёл «{n}». Сайта в карточке нет.',
+  'Нашёл вас в 2ГИС среди кровельных компаний {w}, а сайта в карточке не нашёл.'
+];
+const OFFER_READY = [
+  'Понимаю, что неожиданно, но я уже собрал для «{n}» сайт. Показать?',
+  'Это неожиданно, но у меня уже готов сайт для «{n}». Показать?',
+  'Скажу прямо: я уже собрал сайт под «{n}». Хотите посмотреть?'
+];
+const OFFER_LATER = [
+  'Могу за вечер собрать для «{n}» сайт и показать. Платить не нужно, пока не понравится. Собрать?',
+  'Готов за вечер собрать сайт для «{n}» и показать вам. Денег вперёд не беру. Собрать?',
+  'Могу собрать сайт под «{n}» за вечер и показать. Не понравится — ничего не должны. Сделать?'
+];
+const SITE_OPEN = 'Смотрел в 2ГИС кровельные компании {w}, зашёл на ваш сайт с телефона: {f}.';
+const SITE_READY = 'Собрал вариант под «{n}», где это исправлено. Показать?';
+const SITE_LATER = 'Могу за вечер собрать вариант под «{n}», где это исправлено, и показать. Собрать?';
+const PENDING = 'Сообщение появится, когда впишешь, что не так на их сайте.';
+
+const S = { name: '', demo: false, optout: true, target: 'wa', limit: 15, st: {}, fact: {}, ovr: {},
+            tab: 'queue', batch: 1, region: '', krd: false, nosite: false, confirmed: false, notrade: false,
+            mode: 'send', ctab: 'today', view: 'board', me: '', mgr: '' };
+try { const raw = localStorage.getItem(KEY); if (raw) Object.assign(S, JSON.parse(raw)); } catch (e) {}
+if (!['queue', 'sent', 'stop', 'all'].includes(S.tab)) S.tab = 'queue';   // «Ответили» переехали в воронку
+
+// Воронка. Запись лида в S.st[телефон]: s — этап, sentAt — когда написал, sAt — когда сменился этап,
+// next — следующий контакт ('ГГГГ-ММ-ДДTЧЧ:ММ'), note — заметка, hadCall — доходил до созвона, upd — последняя правка.
+const STAGES = [
+  { id: 'sent',     label: 'Отправлено',  tone: 'sent' },
+  { id: 'noreply',  label: 'Не ответил',  tone: 'muted' },
+  { id: 'replied',  label: 'Ответил',     tone: 'ok' },
+  { id: 'work',     label: 'Доработать',  tone: 'warn' },
+  { id: 'callback', label: 'Перезвонить', tone: 'warn', date: true },
+  { id: 'call',     label: 'Созвон',      tone: 'ok',   date: true },
+  { id: 'won',      label: 'Клиент',      tone: 'win' },
+  { id: 'lost',     label: 'Отказ',       tone: 'stop' },
+  { id: 'stop',     label: 'Не писать',   tone: 'stop' }
+];
+const STAGE = Object.fromEntries(STAGES.map((x) => [x.id, x]));
+const OPEN = ['sent', 'noreply', 'replied', 'work', 'callback', 'call'];                 // лид ещё в работе, ему можно назначить дату
+const ANSWERED = ['replied', 'work', 'callback', 'call', 'won', 'lost'];
+const pin = new Set();   // карточки, которые остаются на экране после смены этапа, пока не сменишь вкладку
+let Q = '';
+let sorted = false;
+const MANAGERS = ['Ильяс', 'Зураб', 'Тимурлан'];   // менеджер лида лежит в записи: S.st[телефон].m
+const NOBODY = '—';                                // значение фильтра «без менеджера»
+const BOARD = ['sent', 'noreply', 'replied', 'work', 'callback', 'call', 'won', 'lost'];   // колонки канбана
+const SILENT_DAYS = 3;   // через столько дней без ответа «Отправлено» само всплывает в делах
+let sheetP = null;       // лид, открытый в окне поверх канбана
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fill = (t, lead, f) => t.replaceAll('{n}', lead.n).replaceAll('{w}', lead.w).replaceAll('{f}', f || '');
+// i is the lead's position inside its own batch: it numbers the card and picks the wording variant
+const seq = {};
+const byPhone = new Map(LEADS.map((l) => { seq[l.b] = (seq[l.b] || 0); return [l.p, { lead: l, i: seq[l.b]++ }]; }));
+const BATCH_TAG = { 1: 'пачка 1', 2: 'пачка 2' };
+
+function template(lead, i) {
+  const v = i % 3;
+  const name = S.name.trim();
+  const greet = name ? 'Здравствуйте! Это ' + name + '.' : 'Здравствуйте!';
+  let open, offer;
+  if (lead.s) {
+    const fact = (S.fact[lead.p] || '').trim().replace(/[.!?…]+$/, '');
+    if (!fact) return null;
+    open = fill(SITE_OPEN, lead, fact);
+    offer = fill(S.demo ? SITE_READY : SITE_LATER, lead);
+  } else {
+    open = fill((lead.g ? OPEN_GOOD : OPEN_PLAIN)[v], lead);
+    offer = fill((S.demo ? OFFER_READY : OFFER_LATER)[v], lead);
+  }
+  return greet + ' ' + open + '\n\n' + offer + (S.optout ? '\n\n' + OPT : '');
+}
+function message(lead, i) {
+  const o = S.ovr[lead.p];
+  if (typeof o === 'string') return o.trim() ? o : null;
+  return template(lead, i);
+}
+function chatLink(p, text) {
+  const q = encodeURIComponent(text);
+  return S.target === 'web' ? 'https://web.whatsapp.com/send?phone=' + p + '&text=' + q : 'https://wa.me/' + p + '?text=' + q;
+}
+const chatOnly = (p) => (S.target === 'web' ? 'https://web.whatsapp.com/send?phone=' + p : 'https://wa.me/' + p);
+const statusOf = (p) => (S.st[p] && STAGE[S.st[p].s] ? S.st[p].s : '');
+
+const pad = (n) => String(n).padStart(2, '0');
+const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+const shortDate = (t) => new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+function dueInfo(r) {
+  if (!OPEN.includes(r.s)) return null;
+  if (!r.next) {
+    const quiet = silentDays(r);
+    if (quiet >= SILENT_DAYS) return { text: 'молчит ' + quiet + ' дн.', tone: 'warn' };
+    return STAGE[r.s].date ? { text: 'дата не указана', tone: 'warn' } : null;
+  }
+  const d = new Date(r.next);
+  if (isNaN(d)) return null;
+  const days = Math.round((dayStart(d) - dayStart(new Date())) / 86400000);
+  const time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  if (days < 0) return { text: 'просрочено: было ' + shortDate(d) + ' в ' + time, tone: 'stop' };
+  if (days === 0) return { text: 'сегодня в ' + time, tone: 'warn' };
+  if (days === 1) return { text: 'завтра в ' + time, tone: 'plain' };
+  return { text: shortDate(d) + ' в ' + time, tone: 'plain' };
+}
+// сколько дней лид в «Отправлено» без ответа
+function silentDays(r) { return r.s === 'sent' && r.sentAt ? Math.floor((Date.now() - r.sentAt) / 86400000) : 0; }
+function isDue(p) {
+  const r = S.st[p];
+  if (r && !r.next && silentDays(r) >= SILENT_DAYS) return true;
+  if (!r || !r.next || !OPEN.includes(r.s)) return false;
+  const d = new Date(r.next);
+  return !isNaN(d) && dayStart(d) <= dayStart(new Date());
+}
+// порядок в воронке: сначала с датой (ближайшие и просроченные сверху), потом без даты — кому раньше написал
+function sortKey(p) {
+  const r = S.st[p] || {};
+  if (r.next && OPEN.includes(r.s)) { const t = new Date(r.next).getTime(); if (!isNaN(t)) return t; }
+  return 1e13 + (r.sentAt || r.sAt || 0);
+}
+
+function crmHtml(lead, r) {
+  const due = dueInfo(r);
+  const chips = STAGES.map((x) => '<button class="st" type="button" data-st="' + x.id + '" data-tone="' + x.tone + '" aria-pressed="' + (x.id === r.s) + '">' + x.label + '</button>').join('');
+  const day = (n, label) => '<button class="st" type="button" data-act="day" data-days="' + n + '">' + label + '</button>';
+  const when = OPEN.includes(r.s) ? (
+    '<div class="crm-row"><label class="crm-label" for="next-' + lead.p + '">Следующий контакт</label>' +
+      '<input type="datetime-local" class="next" id="next-' + lead.p + '" value="' + esc(r.next || '') + '">' +
+      day(0, 'сегодня') + day(1, 'завтра') + day(3, 'через 3 дня') + day(7, 'через неделю') + (r.next ? day('', 'убрать дату') : '') +
+      (due ? '<span class="due" data-tone="' + due.tone + '">' + esc(due.text) + '</span>' : '') +
+    '</div>'
+  ) : '';
+  const hist = Array.isArray(r.h) && r.h.length
+    ? 'История: ' + r.h.map((x) => (STAGE[x[1]] ? STAGE[x[1]].label : 'в очередь') + ' ' + shortDate(x[0])).join(' → ')
+    : [r.sentAt ? 'написал ' + shortDate(r.sentAt) : '', r.sAt ? 'этап с ' + shortDate(r.sAt) : ''].filter(Boolean).join(' · ');
+  const people = MANAGERS.map((m) => '<button class="st" type="button" data-act="mgr" data-m="' + m + '" data-tone="muted" aria-pressed="' + (r.m === m) + '">' + dot(m) + m + '</button>').join('');
+  return '<div class="crm">' +
+    '<div class="crm-row"><span class="crm-label">Этап</span>' + chips + '</div>' +
+    '<div class="crm-row"><span class="crm-label">Менеджер</span>' + people + '</div>' +
+    when +
+    '<div class="crm-row"><label class="crm-label" for="note-' + lead.p + '">Заметка</label>' +
+      '<textarea class="note" id="note-' + lead.p + '" rows="2" placeholder="О чём договорились, что показать, какие возражения">' + esc(r.note || '') + '</textarea></div>' +
+    '<div class="actions">' +
+      '<a class="btn primary" target="_blank" rel="noopener" href="' + chatOnly(lead.p) + '">Открыть чат</a>' +
+      '<a class="btn" href="tel:+' + lead.p + '">Позвонить</a>' +
+      '<button class="btn" type="button" data-act="requeue">Вернуть в очередь</button>' +
+      '<span class="phone">+' + lead.p + '</span></div>' +
+    (hist ? '<p class="hist">' + hist + '</p>' : '') +
+  '</div>';
+}
+
+function rowHtml(lead) {
+  const i = byPhone.get(lead.p).i;
+  const st = statusOf(lead.p);
+  const r = S.st[lead.p];
+  const reviews = lead.k ? '★ ' + esc(lead.r) + ' · отзывов: ' + lead.k : 'отзывов нет';
+  const due = st ? dueInfo(r) : null;
+  const tags = [
+    st ? '<span class="tag stage" data-tone="' + STAGE[st].tone + '">' + STAGE[st].label + (due ? ' · ' + esc(due.text) : '') + '</span>' : '',
+    st && r.m ? '<span class="tag mgr">' + dot(r.m) + esc(r.m) + '</span>' : '',
+    '<span class="tag batch-tag">' + BATCH_TAG[lead.b] + '</span>',
+    lead.s ? '<span class="tag">есть сайт</span>' : '<span class="tag good">без сайта</span>',
+    lead.c ? '<span class="tag">WhatsApp в карточке</span>' : '<span class="tag care">мобильный, WhatsApp не подтверждён</span>',
+    lead.t ? '<span class="tag care">похоже на магазин</span>' : ''
+  ].join('');
+  const head = '<div class="lead-head"><span class="num">' + (i + 1) + '</span>' +
+      '<div class="who"><h2 class="name">' + esc(lead.n) + '</h2><p class="meta">' + esc(lead.city || 'Краснодарский край') + ' · ' + reviews + '</p></div>' +
+      '<div class="tags">' + tags + '</div></div>';
+  // лид уже в воронке: вместо первого сообщения — этап, дата и заметка
+  if (st) return '<li class="lead" id="lead-' + lead.p + '" data-p="' + lead.p + '" data-status="' + st + '">' + head + crmHtml(lead, r) + '</li>';
+  const fact = lead.s ? (
+    '<label class="field fact-field"><span>Что не так на сайте <a href="http://' + esc(lead.s) + '" target="_blank" rel="noopener">' + esc(lead.s) + '</a></span>' +
+    '<input type="text" class="fact" id="fact-' + lead.p + '" autocomplete="off" placeholder="нет кнопки записи, не открывается прайс…" value="' + esc(S.fact[lead.p] || '') + '"></label>'
+  ) : '';
+  const editing = typeof S.ovr[lead.p] === 'string';
+  return '<li class="lead' + (editing ? ' editing' : '') + '" id="lead-' + lead.p + '" data-p="' + lead.p + '" data-status="">' +
+    head +
+    fact +
+    '<p class="msg"' + (editing ? ' hidden' : '') + '></p>' +
+    '<textarea class="ovr" id="ovr-' + lead.p + '" aria-label="Свой текст сообщения"' + (editing ? '' : ' hidden') + '>' + esc(editing ? S.ovr[lead.p] : '') + '</textarea>' +
+    '<div class="actions">' +
+      '<a class="btn primary open" target="_blank" rel="noopener">Открыть WhatsApp</a>' +
+      '<button class="btn" type="button" data-act="copy">Скопировать текст</button>' +
+      '<button class="btn" type="button" data-act="edit">' + (editing ? 'Вернуть шаблон' : 'Править текст') + '</button>' +
+      '<span class="phone">+' + lead.p + '</span></div>' +
+    '<div class="status"><span class="status-label">Отметить:</span>' +
+      '<button class="st" type="button" data-st="sent">Отправлено</button>' +
+      '<button class="st" type="button" data-st="replied">Ответил</button>' +
+      '<button class="st" type="button" data-st="stop">Не писать</button></div>' +
+  '</li>';
+}
+
+function refreshMsg(li) {
+  const { lead, i } = byPhone.get(li.dataset.p);
+  const text = message(lead, i);
+  const msg = li.querySelector('.msg');
+  const a = li.querySelector('.open');
+  if (!msg) return;   // карточка в воронке: первого сообщения в ней нет
+  msg.textContent = text || PENDING;
+  msg.classList.toggle('pending', !text);
+  if (text) {
+    a.href = chatLink(lead.p, text);
+    a.removeAttribute('aria-disabled');
+    a.textContent = 'Открыть WhatsApp';
+  } else {
+    a.removeAttribute('href');
+    a.setAttribute('aria-disabled', 'true');
+    a.textContent = lead.s && typeof S.ovr[lead.p] !== 'string' ? 'Сначала факт о сайте' : 'Нужен текст';
+  }
+}
+const rows = () => Array.from(document.querySelectorAll('.lead'));
+const refreshAll = () => rows().forEach(refreshMsg);
+
+const mi = (m) => MANAGERS.indexOf(m);
+const dot = (m) => '<i class="dot" data-i="' + mi(m) + '"></i>';
+// фильтр по менеджеру действует только на тех, кто уже в воронке: очередь общая
+function mgrOk(lead) {
+  const r = S.st[lead.p];
+  return !(S.mgr && statusOf(lead.p) && (S.mgr === NOBODY ? !!r.m : r.m !== S.mgr));
+}
+function matches(lead) {
+  const r = S.st[lead.p];
+  if (!mgrOk(lead)) return false;
+  if (!Q) return true;
+  return (lead.n + ' ' + (lead.city || '') + ' ' + lead.reg + ' ' + lead.p + ' ' + ((r && r.note) || '')).toLowerCase().includes(Q);
+}
+function visible(lead) {
+  if (pin.has(lead.p)) return true;
+  if (!matches(lead)) return false;
+  const s = statusOf(lead.p);
+  if (S.mode === 'crm') {
+    if (!s) return false;
+    if (S.ctab === 'today') return isDue(lead.p);
+    return S.ctab === 'allc' || s === S.ctab;
+  }
+  if (lead.b !== S.batch) return false;
+  if (S.tab === 'queue' && s) return false;
+  if (S.tab === 'sent' && (!s || s === 'stop')) return false;
+  if (S.tab === 'stop' && s !== 'stop') return false;
+  if (S.batch === 1 && S.krd && !lead.l) return false;
+  if (S.batch === 2 && S.region && lead.reg !== S.region) return false;
+  if (S.nosite && lead.s) return false;
+  if (S.confirmed && !lead.c) return false;
+  if (S.notrade && lead.t) return false;
+  return true;
+}
+function applyFilters() {
+  const crm = S.mode === 'crm';
+  const list = $('queue');
+  const shown = [];
+  const board = crm && S.view !== 'list';
+  rows().forEach((li) => {
+    if (li.dataset.p === sheetP) { li.hidden = false; return; }   // открыт в окне: не трогаем
+    const ok = visible(byPhone.get(li.dataset.p).lead);
+    li.hidden = !ok;
+    if (ok) shown.push(li);
+  });
+  if (crm) {
+    shown.sort((a, b) => sortKey(a.dataset.p) - sortKey(b.dataset.p)).forEach((li) => list.appendChild(li));
+    sorted = true;
+  } else if (sorted) {
+    LEADS.forEach((l) => list.appendChild($('lead-' + l.p)));
+    sorted = false;
+  }
+  $('empty').hidden = board || shown.length > 0;
+  $('empty').textContent = Q ? 'По этому запросу никого нет.'
+    : !crm ? 'В этом разделе пока пусто.'
+    : S.ctab === 'today' ? 'На сегодня дел нет. Сюда попадают лиды, у которых дата следующего контакта — сегодня или раньше.'
+    : 'Здесь пока никого. Лид попадает сюда, когда отметишь у него этот этап.';
+  document.querySelectorAll('#tabs .tab').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === S.tab)));
+  document.querySelectorAll('#ctabs .tab').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === S.ctab)));
+  document.querySelectorAll('.mode').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === S.mode)));
+  document.querySelectorAll('#flags .flag').forEach((b) => b.setAttribute('aria-pressed', String(!!S[b.dataset.flag])));
+  document.querySelectorAll('.batch').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.batch) === S.batch)));
+  $('batches').hidden = crm;
+  $('tabs').hidden = crm;
+  $('ctabs').hidden = !crm || board;
+  $('views').hidden = !crm;
+  $('overview').hidden = !crm;
+  if (crm) renderOverview();
+  document.querySelectorAll('#views .tab').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.view === 'list') === !board)));
+  $('queue').hidden = board;
+  $('board').hidden = !board;
+  $('board-hint').hidden = !board;
+  if (board) renderBoard();
+  $('flags').hidden = crm;
+  $('flag-krd').hidden = S.batch !== 1;
+  $('set-region').hidden = S.batch !== 2;
+}
+function counters() {
+  const blank = () => ({ queue: 0, sent: 0, stop: 0, all: 0 });
+  const per = { 1: blank(), 2: blank() };
+  const stage = {};
+  STAGES.forEach((x) => { stage[x.id] = 0; });
+  let due = 0, answered = 0, calls = 0, inFunnel = 0, active = 0, won = 0;
+  LEADS.forEach((l) => {
+    const s = statusOf(l.p);
+    const r = S.st[l.p];
+    per[l.b][!s ? 'queue' : s === 'stop' ? 'stop' : 'sent']++;
+    per[l.b].all++;
+    if (!s) return;
+    if (ANSWERED.includes(s)) answered++;
+    if (s === 'call' || r.hadCall) calls++;
+    if (s === 'won') won++;
+    if (!mgrOk(l)) return;                 // ниже — только лиды выбранного менеджера
+    stage[s]++; inFunnel++;
+    if (isDue(l.p)) due++;
+
+    if (['replied', 'work', 'callback', 'call'].includes(s)) active++;
+  });
+  const n = per[S.batch];
+  const sum = (k) => per[1][k] + per[2][k];
+  const day = new Date().toDateString();
+  const today = Object.values(S.st).filter((x) => x.sentAt && new Date(x.sentAt).toDateString() === day).length;
+  const limit = Math.max(1, Number(S.limit) || 15);
+  $('today').textContent = today;
+  $('limit-view').textContent = limit;
+  $('bar').style.width = Math.min(100, Math.round(today / limit * 100)) + '%';
+  $('meter').classList.toggle('full', today >= limit);
+  $('limit-note').hidden = today < limit;
+  $('c-queue').textContent = sum('queue');
+  $('c-sent').textContent = sum('sent');
+  $('c-replied').textContent = answered;
+  $('c-calls').textContent = calls;
+  $('c-won').textContent = won;
+  $('c-due').textContent = due;
+  $('due-link').hidden = due === 0;
+  $('m-crm').textContent = active || '';
+  [1, 2].forEach((b) => { $('b' + b + '-queue').textContent = per[b].queue; $('b' + b + '-all').textContent = per[b].all; });
+  $('t-queue').textContent = n.queue;
+  $('t-sent').textContent = n.sent;
+  $('t-stop').textContent = n.stop;
+  $('t-all').textContent = n.all;
+  $('ct-today').textContent = due;
+  ['noreply', 'replied', 'work', 'callback', 'call', 'won', 'lost', 'sent'].forEach((k) => { $('ct-' + k).textContent = stage[k]; });
+  $('ct-allc').textContent = inFunnel;
+  const mine = { '': 0 };
+  LEADS.forEach((l) => { if (statusOf(l.p)) { const m = S.st[l.p].m || NOBODY; mine[m] = (mine[m] || 0) + 1; mine['']++; } });
+  const chip = (v, label) => '<button class="flag" type="button" data-mgr="' + v + '" aria-pressed="' + (S.mgr === v) + '">' + label + '<b>' + (mine[v] || 0) + '</b></button>';
+  $('mgr-chips').innerHTML = chip('', 'Все') + MANAGERS.map((m) => chip(m, dot(m) + m)).join('') + chip(NOBODY, 'Без менеджера');
+  $('me-hint').hidden = !!S.me;
+}
+function renderOverview() {
+  const cnt = {};
+  STAGES.forEach((x) => { cnt[x.id] = 0; });
+  let total = 0, today = 0, overdue = 0, quiet = 0, answered = 0, calls = 0;
+  const dated = [];
+  const t0 = dayStart(new Date());
+  LEADS.forEach((l) => {
+    const st = statusOf(l.p);
+    if (!st || !mgrOk(l)) return;
+    const r = S.st[l.p];
+    cnt[st]++; total++;
+    if (ANSWERED.includes(st)) answered++;
+    if (st === 'call' || r.hadCall) calls++;
+    if (!r.next && silentDays(r) >= SILENT_DAYS) quiet++;
+    if (r.next && OPEN.includes(st)) {
+      const t = new Date(r.next).getTime();
+      if (isNaN(t)) return;
+      if (dayStart(new Date(t)) < t0) overdue++; else if (dayStart(new Date(t)) === t0) today++;
+      dated.push([t, l]);
+    }
+  });
+  const written = total - cnt.stop;
+  const active = cnt.replied + cnt.work + cnt.callback + cnt.call;
+  const tile = (n, label, tone) => '<div class="ov-tile"' + (tone && n ? ' data-tone="' + tone + '"' : '') + '><b>' + n + '</b><span>' + label + '</span></div>';
+  const pct = (a, b) => (b ? Math.round(a / b * 100) + '%' : '—');
+  const strip = BOARD.filter((k) => cnt[k]).map((k) => '<i data-tone="' + STAGE[k].tone + '" style="flex:' + cnt[k] + '" title="' + STAGE[k].label + ': ' + cnt[k] + '"></i>').join('');
+  const legend = BOARD.map((k) => '<span class="tag stage" data-tone="' + STAGE[k].tone + '">' + STAGE[k].label + '<b>' + cnt[k] + '</b></span>').join('');
+  const next = dated.sort((a, b) => a[0] - b[0]).slice(0, 5).map((x) => {
+    const l = x[1], r = S.st[l.p], due = dueInfo(r);
+    return '<button class="ov-item" type="button" data-p="' + l.p + '"><strong>' + (r.m ? dot(r.m) : '') + esc(l.n) + '</strong>' +
+      '<span class="tag stage" data-tone="' + STAGE[r.s].tone + '">' + STAGE[r.s].label + '</span>' +
+      (due ? '<span class="due" data-tone="' + due.tone + '">' + esc(due.text) + '</span>' : '') +
+      (r.note ? '<span class="knote">' + esc(r.note) + '</span>' : '') + '</button>';
+  }).join('');
+  $('overview').innerHTML = !total
+    ? '<p class="ov-conv">В воронке пока никого' + (S.mgr ? ' у выбранного менеджера' : '') + '. Лид попадает сюда, когда отметишь его в «Рассылке».</p>'
+    : '<div class="ov-tiles">' +
+        tile(active, 'в работе', 'ok') + tile(today, 'дел на сегодня', 'warn') + tile(overdue, 'просрочено', 'stop') +
+        tile(quiet, 'молчат ' + SILENT_DAYS + '+ дн.', 'warn') + tile(cnt.call, 'созвонов назначено', 'ok') + tile(cnt.won, 'клиентов', 'ok') +
+      '</div>' +
+      '<div class="ov-strip">' + strip + '</div>' +
+      '<div class="ov-legend">' + legend + '</div>' +
+      '<p class="ov-conv">Написал <b>' + written + '</b> → ответили <b>' + answered + '</b> (' + pct(answered, written) + ') → дошли до созвона <b>' + calls + '</b> (' + pct(calls, written) + ') → клиенты <b>' + cnt.won + '</b> (' + pct(cnt.won, written) + ')</p>' +
+      (next ? '<div class="ov-next"><h3>Ближайшие дела</h3>' + next + '</div>' : '');
+}
+function kcardHtml(l) {
+  const r = S.st[l.p];
+  const due = dueInfo(r);
+  return '<button class="kcard" type="button" draggable="true" data-p="' + l.p + '"' + (r.m ? ' data-i="' + mi(r.m) + '"' : '') + '><strong>' + esc(l.n) + '</strong>' +
+    '<span class="kmeta">' + esc(l.city || l.reg) + '</span>' +
+    (due ? '<span class="due" data-tone="' + due.tone + '">' + esc(due.text) + '</span>' : '') +
+    (r.note ? '<span class="knote">' + esc(r.note) + '</span>' : '') +
+    (r.m ? '<span class="kmgr">' + esc(r.m) + '</span>' : '') + '</button>';
+}
+function renderBoard() {
+  const cols = {};
+  BOARD.forEach((k) => { cols[k] = []; });
+  LEADS.forEach((l) => { const st = statusOf(l.p); if (cols[st] && matches(l)) cols[st].push(l); });
+  $('board').innerHTML = BOARD.map((k) => {
+    const list = cols[k].sort((a, b) => sortKey(a.p) - sortKey(b.p));
+    return '<section class="col" data-col="' + k + '"><h3 class="col-head"><span class="tag stage" data-tone="' + STAGE[k].tone + '">' + STAGE[k].label + '</span><b>' + list.length + '</b></h3>' +
+      '<div class="col-body">' + (list.map(kcardHtml).join('') || '<p class="col-empty">пусто</p>') + '</div></section>';
+  }).join('');
+}
+function openSheet(p) {
+  if (sheetP) closeSheet();
+  sheetP = p;
+  const li = $('lead-' + p);
+  li.hidden = false;
+  $('sheet-list').appendChild(li);
+  if (!$('sheet').open) $('sheet').showModal();
+}
+function closeSheet() {
+  if (!sheetP) return;
+  const li = $('lead-' + sheetP);
+  sheetP = null;
+  if (li) $('queue').appendChild(li);
+  sorted = true;   // порядок в общем списке нарушен: вернётся при следующем показе
+  if ($('sheet').open) $('sheet').close();
+  unpin(); applyFilters(); counters();
+}
+function rerender(p) {
+  $('lead-' + p).outerHTML = rowHtml(byPhone.get(p).lead);
+  const li = $('lead-' + p);
+  refreshMsg(li);
+  return li;
+}
+function setStatus(p, s) {
+  const cur = S.st[p] || {};
+  if ((cur.s || '') === s) return;
+  const now = Date.now();
+  const rec = Object.assign({}, cur, { s: s, sAt: now, upd: now });
+  rec.h = (Array.isArray(cur.h) ? cur.h : (cur.s && cur.sentAt ? [[cur.sentAt, cur.s]] : [])).concat([[now, s]]).slice(-12);
+  if (!s) { delete rec.sentAt; delete rec.sAt; }                      // вернули в очередь: считаем, что не писали
+  else if (s !== 'stop' && !rec.sentAt) rec.sentAt = now;
+  if (s === 'call') rec.hadCall = true;
+  if (s && !rec.m && S.me) rec.m = S.me;                              // кто отметил, тот и ведёт
+  if (!OPEN.includes(s)) delete rec.next;                             // у закрытого лида напоминаний нет
+  if (!s && !rec.note && !rec.hadCall && rec.h.length < 2) delete S.st[p]; else S.st[p] = rec;
+  save();
+  // в рассылке отмеченный лид сразу уходит из очереди; в остальных случаях карточка остаётся, чтобы дописать дату и заметку
+  if (S.mode === 'crm' || !['sent', 'stop'].includes(s)) pin.add(p);
+  const li = rerender(p);
+  applyFilters();
+  counters();
+  if (s && STAGE[s].date && !rec.next) {
+    if (S.mode === 'crm' && S.view !== 'list' && sheetP !== p) openSheet(p);
+    const f = $('lead-' + p).querySelector('.next'); if (f) f.focus();
+  }
+}
+function setNext(p, value) {
+  const r = S.st[p];
+  if (!r) return;
+  if (value) r.next = value; else delete r.next;
+  r.upd = Date.now();
+  save();
+  pin.add(p);
+  rerender(p);
+  applyFilters();
+  counters();
+}
+function quickDay(p, days) {
+  if (days === '') { setNext(p, ''); return; }
+  const r = S.st[p] || {};
+  const d = new Date();
+  d.setDate(d.getDate() + Number(days));
+  // время берём из уже назначенного; иначе 10:00, а для «сегодня» — ближайший час
+  const time = r.next ? r.next.slice(11, 16) : (Number(days) === 0 ? pad(Math.min(new Date().getHours() + 1, 23)) + ':00' : '10:00');
+  setNext(p, d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + time);
+}
+function setManager(p, m) {
+  const r = S.st[p];
+  if (!r) return;
+  if (r.m === m) delete r.m; else r.m = m;
+  r.upd = Date.now();
+  save();
+  pin.add(p);
+  rerender(p);
+  applyFilters();
+  counters();
+}
+function unpin() { pin.clear(); }
+
+// копия отметок: файл для переноса между устройствами и на случай очистки браузера
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: type }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const stamp = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+function exportCopy() {
+  download('wa-ochered-' + stamp() + '.json', JSON.stringify({ app: 'wa-queue', v: 2, exported: new Date().toISOString(), st: S.st, fact: S.fact, ovr: S.ovr }), 'application/json');
+  $('data-note').textContent = 'Копия скачана: отметок в ней ' + Object.keys(S.st).length + '.';
+}
+function importCopy(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let d;
+    try { d = JSON.parse(reader.result); } catch (e) { d = null; }
+    if (!d || d.app !== 'wa-queue' || typeof d.st !== 'object' || !d.st) { $('data-note').textContent = 'Это не файл копии с этой страницы: ничего не изменено.'; return; }
+    let taken = 0;
+    Object.keys(d.st).forEach((p) => {
+      const inc = d.st[p], cur = S.st[p];
+      if (!byPhone.has(p) || !inc || typeof inc !== 'object') return;
+      // по одному и тому же лиду остаётся более свежая отметка
+      if (!cur || (inc.upd || inc.sentAt || 0) > (cur.upd || cur.sentAt || 0)) { S.st[p] = inc; taken++; }
+    });
+    ['fact', 'ovr'].forEach((k) => { Object.keys(d[k] || {}).forEach((p) => { if (byPhone.has(p) && S[k][p] === undefined && typeof d[k][p] === 'string') S[k][p] = d[k][p]; }); });
+    save();
+    if (sheetP) closeSheet();
+    $('queue').innerHTML = LEADS.map(rowHtml).join('');
+    sorted = false; unpin();
+    refreshAll(); applyFilters(); counters();
+    $('data-note').textContent = 'Загружено. Отметок в файле: ' + Object.keys(d.st).length + ', из них новее здешних: ' + taken + '.';
+  };
+  reader.readAsText(file);
+}
+function exportCsv() {
+  const cell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const when = (t) => (t ? new Date(t).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
+  const out = [['Этап', 'Менеджер', 'Название', 'Город', 'Регион', 'Телефон', 'Следующий контакт', 'Заметка', 'Написал', 'Сайт', 'Пачка'].map(cell).join(';')];
+  LEADS.filter((l) => statusOf(l.p)).sort((a, b) => sortKey(a.p) - sortKey(b.p)).forEach((l) => {
+    const r = S.st[l.p];
+    out.push([STAGE[r.s].label, r.m || '', l.n, l.city, l.reg, '+' + l.p, r.next ? when(r.next) : '', r.note || '', when(r.sentAt), l.s, l.b].map(cell).join(';'));
+  });
+  if (out.length === 1) { $('data-note').textContent = 'В воронке пока никого: выгружать нечего.'; return; }
+  download('voronka-' + stamp() + '.csv', '\ufeff' + out.join('\r\n'), 'text/csv;charset=utf-8');
+  $('data-note').textContent = 'Таблица скачана: строк ' + (out.length - 1) + '. Открывается в Excel и Google Таблицах.';
+}
+function flash(btn, text) {
+  const old = btn.textContent;
+  btn.textContent = text;
+  setTimeout(() => { btn.textContent = old; }, 1600);
+}
+function copyText(li, btn) {
+  const { lead, i } = byPhone.get(li.dataset.p);
+  const text = message(lead, i);
+  if (!text) { flash(btn, 'Текста пока нет'); return; }
+  const fallback = () => {
+    const el = li.classList.contains('editing') ? null : li.querySelector('.msg');
+    if (el) { const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+    else li.querySelector('.ovr').select();
+    flash(btn, 'Выделено, скопируй вручную');
+  };
+  try { navigator.clipboard.writeText(text).then(() => flash(btn, 'Скопировано'), fallback); } catch (e) { fallback(); }
+}
+function toggleEdit(li, btn) {
+  const { lead, i } = byPhone.get(li.dataset.p);
+  const ta = li.querySelector('.ovr');
+  const msg = li.querySelector('.msg');
+  if (li.classList.contains('editing')) {
+    delete S.ovr[lead.p];
+    li.classList.remove('editing');
+    ta.hidden = true; msg.hidden = false;
+    btn.textContent = 'Править текст';
+  } else {
+    S.ovr[lead.p] = template(lead, i) || '';
+    ta.value = S.ovr[lead.p];
+    li.classList.add('editing');
+    ta.hidden = false; msg.hidden = true;
+    btn.textContent = 'Вернуть шаблон';
+    ta.focus();
+  }
+  save();
+  refreshMsg(li);
+}
+
+function start() {
+  $('total').textContent = LEADS.length;
+  $('queue').innerHTML = LEADS.map(rowHtml).join('');
+  $('set-name').value = S.name;
+  $('set-limit').value = S.limit;
+  $('set-demo-' + (S.demo ? 1 : 0)).checked = true;
+  $('set-target-' + (S.target === 'web' ? 'web' : 'wa')).checked = true;
+  $('set-optout').checked = !!S.optout;
+  if (S.batch !== 1 && S.batch !== 2) S.batch = 1;
+  if (S.mode !== 'crm') S.mode = 'send';
+  if (S.view !== 'list') S.view = 'board';
+  if (!MANAGERS.includes(S.me)) S.me = '';
+  if (S.mgr !== NOBODY && !MANAGERS.includes(S.mgr)) S.mgr = '';
+  const opts = MANAGERS.map((m) => '<option value="' + m + '">' + m + '</option>').join('');
+  $('set-me').innerHTML = '<option value="">не выбран</option>' + opts;
+  $('set-me').value = S.me;
+  // выбрал себя — сразу показываем свои лиды
+  $('set-me').addEventListener('change', (e) => { S.me = e.target.value; S.mgr = S.me; save(); unpin(); applyFilters(); counters(); });
+  $('mgr-chips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mgr]');
+    if (!b) return;
+    S.mgr = b.dataset.mgr; save(); unpin(); applyFilters(); counters();
+  });
+  refreshAll(); applyFilters(); counters();
+
+  $('settings').addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.id === 'set-name') S.name = t.value;
+    else if (t.id === 'set-limit') S.limit = Math.max(1, Number(t.value) || 15);
+    else if (t.name === 'demo') S.demo = t.value === '1';
+    else if (t.name === 'target') S.target = t.value;
+    else if (t.id === 'set-optout') S.optout = t.checked;
+    save();
+    if (t.name === 'target') rows().forEach((li) => { const a = li.querySelector('.crm .btn.primary'); if (a) a.href = chatOnly(li.dataset.p); });
+    refreshAll(); counters();
+  });
+  $('batches').addEventListener('click', (e) => {
+    const b = e.target.closest('.batch');
+    if (!b) return;
+    S.batch = Number(b.dataset.batch); save(); unpin(); applyFilters(); counters();
+  });
+  $('set-region').addEventListener('change', (e) => { S.region = e.target.value; save(); unpin(); applyFilters(); });
+  $('modes').addEventListener('click', (e) => {
+    const b = e.target.closest('.mode');
+    if (!b) return;
+    S.mode = b.dataset.mode;
+    if (S.mode === 'crm') S.view = 'board';   // воронка открывается с общей картины
+    save(); unpin(); applyFilters();
+  });
+  $('due-link').addEventListener('click', () => { S.mode = 'crm'; S.view = 'list'; S.ctab = 'today'; save(); unpin(); applyFilters(); $('modes').scrollIntoView({ block: 'start' }); });
+  $('tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('.tab');
+    if (!b) return;
+    S.tab = b.dataset.tab; save(); unpin(); applyFilters();
+  });
+  $('ctabs').addEventListener('click', (e) => {
+    const b = e.target.closest('.tab');
+    if (!b) return;
+    S.ctab = b.dataset.tab; save(); unpin(); applyFilters();
+  });
+  $('q').addEventListener('input', (e) => { Q = e.target.value.trim().toLowerCase(); unpin(); applyFilters(); });
+  $('flags').addEventListener('click', (e) => {
+    const b = e.target.closest('.flag');
+    if (!b) return;
+    S[b.dataset.flag] = !S[b.dataset.flag]; save(); unpin(); applyFilters();
+  });
+  $('views').addEventListener('click', (e) => {
+    const b = e.target.closest('.tab');
+    if (!b) return;
+    S.view = b.dataset.view; save(); unpin(); applyFilters();
+  });
+  $('overview').addEventListener('click', (e) => { const b = e.target.closest('.ov-item'); if (b) openSheet(b.dataset.p); });
+  const boardEl = $('board');
+  boardEl.addEventListener('click', (e) => { const c = e.target.closest('.kcard'); if (c) openSheet(c.dataset.p); });
+  boardEl.addEventListener('dragstart', (e) => { const c = e.target.closest('.kcard'); if (!c) return; e.dataTransfer.setData('text/plain', c.dataset.p); e.dataTransfer.effectAllowed = 'move'; c.classList.add('dragging'); });
+  boardEl.addEventListener('dragend', () => boardEl.querySelectorAll('.dragging, .over').forEach((x) => x.classList.remove('dragging', 'over')));
+  boardEl.addEventListener('dragover', (e) => { const col = e.target.closest('.col'); if (!col) return; e.preventDefault(); boardEl.querySelectorAll('.over').forEach((x) => { if (x !== col) x.classList.remove('over'); }); col.classList.add('over'); });
+  boardEl.addEventListener('drop', (e) => { const col = e.target.closest('.col'); const p = e.dataTransfer.getData('text/plain'); if (!col || !byPhone.has(p)) return; e.preventDefault(); setStatus(p, col.dataset.col); });
+  $('sheet-close').addEventListener('click', closeSheet);
+  $('sheet').addEventListener('close', closeSheet);
+  $('sheet').addEventListener('click', (e) => { if (e.target === $('sheet')) closeSheet(); });
+  $('data-export').addEventListener('click', exportCopy);
+  $('data-csv').addEventListener('click', exportCsv);
+  $('data-import').addEventListener('click', () => $('data-file').click());
+  $('data-file').addEventListener('change', (e) => { if (e.target.files[0]) importCopy(e.target.files[0]); e.target.value = ''; });
+  document.addEventListener('click', (e) => {
+    const li = e.target.closest('.lead');
+    if (!li) return;
+    const open = e.target.closest('.open');
+    if (open) {
+      if (open.getAttribute('aria-disabled') === 'true') { e.preventDefault(); const f = li.querySelector('.fact'); if (f) f.focus(); return; }
+      li.classList.add('opened');
+      li.querySelector('.status-label').textContent = 'Отправил? Отметь:';
+      return;
+    }
+    const st = e.target.closest('.st[data-st]');
+    if (st) { setStatus(li.dataset.p, st.dataset.st); return; }
+    const act = e.target.closest('[data-act]');
+    if (!act) return;
+    if (act.dataset.act === 'copy') copyText(li, act);
+    else if (act.dataset.act === 'edit') toggleEdit(li, act);
+    else if (act.dataset.act === 'requeue') setStatus(li.dataset.p, '');
+    else if (act.dataset.act === 'day') quickDay(li.dataset.p, act.dataset.days);
+    else if (act.dataset.act === 'mgr') setManager(li.dataset.p, act.dataset.m);
+  });
+  document.addEventListener('change', (e) => {
+    const li = e.target.closest('.lead');
+    if (li && e.target.classList.contains('next')) setNext(li.dataset.p, e.target.value);
+  });
+  document.addEventListener('input', (e) => {
+    const li = e.target.closest('.lead');
+    if (!li) return;
+    if (e.target.classList.contains('note')) { const r = S.st[li.dataset.p]; if (r) { r.note = e.target.value; r.upd = Date.now(); save(); } return; }
+    if (e.target.classList.contains('next')) return;
+    if (e.target.classList.contains('fact')) S.fact[li.dataset.p] = e.target.value;
+    else if (e.target.classList.contains('ovr')) S.ovr[li.dataset.p] = e.target.value;
+    else return;
+    save(); refreshMsg(li);
+  });
+}
+start();
+</script>
+</body>
+</html>
