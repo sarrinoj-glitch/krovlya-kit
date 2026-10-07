@@ -47,6 +47,53 @@ def picture(base, alt, w, h, indent='          '):
             f'{indent}  <img src="{base}.jpg" alt="{alt}" loading="lazy" decoding="async" width="{w}" height="{h}">\n{indent}</picture>')
 
 
+def reviews_html(c, rv):
+    assert len(rv['themes']) == 3, 'в блоке отзывов три темы'
+
+    def theme(t):
+        return f'''      <div class="why-item">
+        <div class="why-num">{t["label"]}</div>
+        <h3 class="why-title">{t["title"]}</h3>
+        <p class="why-desc">{t["desc"]}</p>
+        <div class="why-photo">
+{picture(t["photo"], t["alt"], t["w"], t["h"])}
+        </div>
+      </div>'''
+    q = rv['quote']
+    quote = f'<div class="v3-testi"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text">{q["text"]}</div><div class="v3-testi-meta"><div class="v3-testi-ava">{q["initials"]}</div><div><div class="v3-testi-name">{q["name"]}</div><div class="v3-testi-sub">{q["sub"]}</div></div></div></div>'
+    rlinks = '\n      '.join(f'<a class="v3-testi" href="{l["href"]}" target="_blank" rel="noopener"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text"><strong>{l["title"]}</strong>{l["sub"]}</div><div class="v3-testi-meta"><div><div class="v3-testi-name">{l["cta"]} ↗</div></div></div></a>' for l in rv['links'])
+    return f'''<section id="why" class="section">
+  <div class="section-inner">
+    <div class="section-head">
+      <div>
+        <span class="section-eyebrow">{rv["eyebrow"]}</span>
+        <h2 class="section-title">{rv["title_html"]}</h2>
+        <p class="section-lede">{rv["lede"]}</p>
+      </div>
+    </div>
+
+    <div class="why-grid">
+{chr(10).join(theme(t) for t in rv["themes"])}
+    </div>
+
+    <div class="van-reviews">
+      {quote}
+      {rlinks}
+    </div>
+
+    <div class="why-foot">
+      <div class="why-foot-text">
+        {rv["foot_html"]}
+      </div>
+      <a href="#cta" class="btn btn-primary why-foot-cta">
+        {c["cta_label"]}
+        {ARROW}
+      </a>
+    </div>
+  </div>
+</section>'''
+
+
 def build(c):
     s = SKELETON.read_text(encoding='utf-8')
     tel, tel_txt = '+' + c['phone'], c['phone_text']
@@ -128,14 +175,16 @@ def build(c):
 
     def card(k, show, hide):
         p = f' data-prefix="{k["prefix"]}"' if k.get('prefix') else ''
+        # цифра справа необязательна: нет проверяемого числа — нет цифры
+        stat = f'''        <div class="card-stat">
+          <span class="card-stat-number" data-count="{k["count"]}"{p} data-suffix="{k["suffix"]}">0</span>
+          <span class="card-stat-label">{k["stat_label"]}</span>
+        </div>''' if k.get('count') else ''
         return f'''      <div class="annotation-card" data-show="{show}" data-hide="{hide}">
         <div class="card-number">{k["label"]}</div>
         <h3 class="card-title">{k["title"]}</h3>
         <p class="card-desc">{k["desc"]}</p>
-        <div class="card-stat">
-          <span class="card-stat-number" data-count="{k["count"]}"{p} data-suffix="{k["suffix"]}">0</span>
-          <span class="card-stat-label">{k["stat_label"]}</span>
-        </div>
+{stat}
       </div>'''
     zones = [('0', '0.26'), ('0.28', '0.50'), ('0.52', '0.74'), ('0.76', '0.98')]
     assert len(c['cards']) == 4, 'под анимацией ровно четыре подписи'
@@ -162,7 +211,11 @@ def build(c):
         </div>
       </article>'''
     tabs = '\n'.join(f'        <button class="v3-tab{" is-active" if i == 0 else ""}" data-tab="{"all" if i == 0 else i - 1}" role="tab">{t}</button>' for i, t in enumerate(sv['tabs']))
-    ph = sv['photo']
+    ph = sv.get('photo')
+    visual = f'''        <div class="section-visual van-photo">
+{picture(ph["file"], ph["alt"], ph["w"], ph["h"])}
+        </div>
+''' if ph else ''    # фото в шапке услуг ставится, только если есть снимок с объекта компании
     s = sub_once(r'<section id="services" class="section">.*?</section>', f'''<section id="services" class="section">
   <div class="section-inner">
     <div class="section-head">
@@ -172,10 +225,7 @@ def build(c):
         <p class="section-lede">{sv["lede"]}</p>
       </div>
       <div class="section-head-right">
-        <div class="section-visual van-photo">
-{picture(ph["file"], ph["alt"], ph["w"], ph["h"])}
-        </div>
-        <a href="#cta" class="btn btn-secondary section-cta">
+{visual}        <a href="#cta" class="btn btn-secondary section-cta">
           {c["cta_label"]}
           {ARROW}
         </a>
@@ -195,51 +245,11 @@ def build(c):
   </div>
 </section>''', s)
 
-    rv = c['reviews']
-    assert len(rv['themes']) == 3, 'в блоке отзывов три темы'
-
-    def theme(t):
-        return f'''      <div class="why-item">
-        <div class="why-num">{t["label"]}</div>
-        <h3 class="why-title">{t["title"]}</h3>
-        <p class="why-desc">{t["desc"]}</p>
-        <div class="why-photo">
-{picture(t["photo"], t["alt"], t["w"], t["h"])}
-        </div>
-      </div>'''
-    q = rv['quote']
-    quote = f'<div class="v3-testi"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text">{q["text"]}</div><div class="v3-testi-meta"><div class="v3-testi-ava">{q["initials"]}</div><div><div class="v3-testi-name">{q["name"]}</div><div class="v3-testi-sub">{q["sub"]}</div></div></div></div>'
-    rlinks = '\n      '.join(f'<a class="v3-testi" href="{l["href"]}" target="_blank" rel="noopener"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text"><strong>{l["title"]}</strong>{l["sub"]}</div><div class="v3-testi-meta"><div><div class="v3-testi-name">{l["cta"]} ↗</div></div></div></a>' for l in rv['links'])
-    s = sub_once(r'<section id="why" class="section">.*?</section>', f'''<section id="why" class="section">
-  <div class="section-inner">
-    <div class="section-head">
-      <div>
-        <span class="section-eyebrow">{rv["eyebrow"]}</span>
-        <h2 class="section-title">{rv["title_html"]}</h2>
-        <p class="section-lede">{rv["lede"]}</p>
-      </div>
-    </div>
-
-    <div class="why-grid">
-{chr(10).join(theme(t) for t in rv["themes"])}
-    </div>
-
-    <div class="van-reviews">
-      {quote}
-      {rlinks}
-    </div>
-
-    <div class="why-foot">
-      <div class="why-foot-text">
-        {rv["foot_html"]}
-      </div>
-      <a href="#cta" class="btn btn-primary why-foot-cta">
-        {c["cta_label"]}
-        {ARROW}
-      </a>
-    </div>
-  </div>
-</section>''', s)
+    rv = c.get('reviews')
+    if not rv:      # отзывов нет — блок убираем целиком, а не заполняем выдуманным
+        s = sub_once(r'(<!-- Отзывы -->\s*)?<section id="why" class="section">.*?</section>\s*', '', s)
+    else:
+        s = sub_once(r'<section id="why" class="section">.*?</section>', reviews_html(c, rv), s)
 
     pr = c['process']
     assert len(pr['steps']) == 6, 'в блоке «как проходит работа» шесть шагов'
@@ -289,6 +299,7 @@ def build(c):
 </section>''', s)
 
     ct = c['cta']; k = ct['calc']
+    no_price = ''.join(f' data-{attr}="{k[key]}"' for attr, key in (('no-price', 'no_price_html'), ('wa-intro', 'wa_intro'), ('wa-type', 'wa_type')) if k.get(key))
     opts = '\n'.join(f'        <button type="button" class="v3-calc-opt" data-calc-mat="{o["id"]}" data-min="{o["min"]}" data-max="{o["max"]}" data-label="{o["wa_label"]}">{o["title"]}<small>{o["small"]}</small></button>' for o in k['options'])
     s = sub_once(r'<section id="cta" class="final-cta">.*?</section>', f'''<section id="cta" class="final-cta">
   <div class="v3-aurora" aria-hidden="true"></div>
@@ -319,9 +330,9 @@ def build(c):
 
     <!-- Правая колонка: калькулятор-вилка + плашка с графиком -->
     <div class="v3-cta-right">
-    <div class="v3-calc-inline" data-calc-inline>
+    <div class="v3-calc-inline" data-calc-inline{no_price}>
       <div class="v3-calc-inline-head">
-        <span class="v3-calc-inline-eyebrow">Калькулятор · 30 секунд</span>
+        <span class="v3-calc-inline-eyebrow">{k.get("eyebrow", "Калькулятор · 30 секунд")}</span>
         <h3 class="v3-calc-inline-title">{k["title"]}</h3>
       </div>
       <div class="v3-calc-progress" aria-hidden="true">
@@ -329,22 +340,22 @@ def build(c):
       </div>
 
       <div class="v3-calc-step" data-step="1">
-        <h4>Шаг 1 из 3 · Площадь кровли</h4>
+        <h4>Шаг 1 из 3 · {k.get("area_title", "Площадь кровли")}</h4>
         <p>{k["area_hint"]}</p>
         <input type="number" inputmode="numeric" min="10" max="50000" placeholder="{k["area_placeholder"]}" class="v3-calc-input" data-calc-area aria-label="Площадь кровли в квадратных метрах">
         <div class="v3-calc-actions"><button type="button" class="v3-calc-btn v3-calc-btn--next" data-calc-next>Далее →</button></div>
       </div>
 
       <div class="v3-calc-step" data-step="2" style="display:none">
-        <h4>Шаг 2 из 3 · Тип кровли</h4>
+        <h4>Шаг 2 из 3 · {k.get("type_title", "Тип кровли")}</h4>
         <p>{k["type_hint"]}</p>
 {opts}
-        <div class="v3-calc-actions"><button type="button" class="v3-calc-btn v3-calc-btn--back" data-calc-back>← Назад</button><button type="button" class="v3-calc-btn v3-calc-btn--next" data-calc-next disabled>Посчитать →</button></div>
+        <div class="v3-calc-actions"><button type="button" class="v3-calc-btn v3-calc-btn--back" data-calc-back>← Назад</button><button type="button" class="v3-calc-btn v3-calc-btn--next" data-calc-next disabled>{k.get("go", "Посчитать")} →</button></div>
       </div>
 
       <div class="v3-calc-step" data-step="3" style="display:none">
         <div class="v3-calc-result">
-          <span class="v3-calc-inline-eyebrow">Ориентировочная стоимость</span>
+          <span class="v3-calc-inline-eyebrow">{k.get("result_label", "Ориентировочная стоимость")}</span>
           <div class="v3-calc-result-price" data-calc-total>— ₽</div>
           <p class="v3-calc-result-note">{k["result_note"]}</p>
         </div>

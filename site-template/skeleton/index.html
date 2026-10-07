@@ -2691,7 +2691,7 @@ html, body { overflow-x: clip; }
    Оставляем заголовок и главную кнопку сверху, анимацию — в середине, плашку — внизу. */
 @media (max-width: 900px) {
   .v3-hero .hp-burger { display: none; }
-  .v3-hero .hp-hero-title { font-size: min(7vw, 2.6rem); }
+  .v3-hero .hp-hero-title { font-size: min(6.4vw, 2.6rem); }
   .v3-hero .hp-hero-subtitle, .v3-hero .v3-trust, .v3-hero-cta .hp-btn-catalog { display: none; }
   .v3-hero-cta { margin-top: 16px; }
   .v3-hero-cta .hp-btn-primary { padding: 15px 20px; }
@@ -3624,8 +3624,9 @@ window.addEventListener('scroll', () => {
       areaInput.style.borderColor = '';
     }
     if (step === 2) {
-      root.querySelector('[data-calc-total]').innerHTML = 'от ' + fmt(data.area * data.min) + '<br>до ' + fmt(data.area * data.max) + ' ₽';
-      const text = 'Здравствуйте! Хочу рассчитать кровлю. Площадь: ' + data.area + ' м². Тип: ' + data.label + '.';
+      // у варианта нет цены (min и max = 0) — сумму не показываем, только собираем заявку
+      root.querySelector('[data-calc-total]').innerHTML = data.max ? 'от ' + fmt(data.area * data.min) + '<br>до ' + fmt(data.area * data.max) + ' ₽' : (root.dataset.noPrice || 'Посчитаем<br>после осмотра');
+      const text = (root.dataset.waIntro || 'Здравствуйте! Хочу рассчитать кровлю.') + ' Площадь: ' + data.area + ' м². ' + (root.dataset.waType || 'Тип') + ': ' + data.label + '.';
       root.querySelector('[data-calc-wa]').href = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
       show(3);
       requestAnimationFrame(() => confetti(root.querySelector('[data-calc-confetti]')));
