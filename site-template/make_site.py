@@ -59,9 +59,15 @@ def reviews_html(c, rv):
 {picture(t["photo"], t["alt"], t["w"], t["h"])}
         </div>
       </div>'''
-    q = rv['quote']
-    quote = f'<div class="v3-testi"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text">{q["text"]}</div><div class="v3-testi-meta"><div class="v3-testi-ava">{q["initials"]}</div><div><div class="v3-testi-name">{q["name"]}</div><div class="v3-testi-sub">{q["sub"]}</div></div></div></div>'
-    rlinks = '\n      '.join(f'<a class="v3-testi" href="{l["href"]}" target="_blank" rel="noopener"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text"><strong>{l["title"]}</strong>{l["sub"]}</div><div class="v3-testi-meta"><div><div class="v3-testi-name">{l["cta"]} ↗</div></div></div></a>' for l in rv['links'])
+    q = rv.get('quote')     # цитата и ссылки на карточки необязательны: нет настоящих — не ставим
+    quote = '' if not q else f'<div class="v3-testi"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text">{q["text"]}</div><div class="v3-testi-meta"><div class="v3-testi-ava">{q["initials"]}</div><div><div class="v3-testi-name">{q["name"]}</div><div class="v3-testi-sub">{q["sub"]}</div></div></div></div>'
+    rlinks = '\n      '.join(f'<a class="v3-testi" href="{l["href"]}" target="_blank" rel="noopener"><div class="v3-testi-stars">★★★★★</div><div class="v3-testi-text"><strong>{l["title"]}</strong>{l["sub"]}</div><div class="v3-testi-meta"><div><div class="v3-testi-name">{l["cta"]} ↗</div></div></div></a>' for l in rv.get('links', []))
+    tiles = '\n      '.join(x for x in (quote, rlinks) if x)
+    testi = f'''    <div class="van-reviews">
+      {tiles}
+    </div>
+
+''' if tiles else ''
     return f'''<section id="why" class="section">
   <div class="section-inner">
     <div class="section-head">
@@ -76,12 +82,7 @@ def reviews_html(c, rv):
 {chr(10).join(theme(t) for t in rv["themes"])}
     </div>
 
-    <div class="van-reviews">
-      {quote}
-      {rlinks}
-    </div>
-
-    <div class="why-foot">
+{testi}    <div class="why-foot">
       <div class="why-foot-text">
         {rv["foot_html"]}
       </div>
@@ -382,6 +383,8 @@ def build(c):
   </div>
 </footer>''', s)
     s = sub_once(r"const WA_NUMBER = '\d+';", f"const WA_NUMBER = '{c['phone']}';", s)
+    if c.get('demo_note'):      # полоса вверху страницы: честно говорит, что на демо стоят примеры, а не данные компании
+        s = s.replace('<body>', '<body>\n<div style="background:#111B30;color:#fff;font:600 13px/1.4 Manrope,system-ui,sans-serif;text-align:center;padding:9px 16px;position:relative;z-index:50">' + c['demo_note'] + '</div>', 1)
     return s
 
 
