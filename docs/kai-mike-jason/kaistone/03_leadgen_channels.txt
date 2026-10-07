@@ -1,0 +1,91 @@
+Different notebook specified, starting new conversation...
+Continuing conversation bcc0d593...
+Answer:
+Beyond cold calling, Kai Stone utilizes and recommends several acquisition 
+channels, shifting from manual, one-to-one outreach to scalable "one-to-many" 
+systems as revenue grows [1, 2]. He specifically emphasizes that while cold 
+calling builds the necessary sales skills, paid ads and automation are the only 
+ways to achieve "hyperscale" [3-5].
+
+### **1. Meta (Facebook & Instagram) Ads**
+Stone identifies Meta ads as the fastest way to scale any company and recommends
+starting them once an agency reaches **$3,000 to $5,000 in monthly recurring 
+revenue (MRR)** [6, 7].
+*   **The Funnel Role:** He uses a three-stage evolution for ad funnels:
+    *   **Version 1 (Flow/Scrappy):** Meta Lead Form ads where users stay on 
+Facebook and provide only a name and number [8, 9]. This prioritizes "flow" over
+"friction" to get high volume [10]. Leads here often cost **$10 to $20 each** 
+but are typically lower quality [11, 12].
+    *   **Version 2 (Friction/Quality):** Ads that direct users to a landing 
+page with qualifying questions (e.g., current revenue, business ownership) [8, 
+11, 13].
+    *   **Version 3 (Hyperscale):** A "Book-a-Call" funnel where the landing 
+page includes a 5-10 minute **Video Sales Letter (VSL)** that pre-sells the 
+prospect before they book a meeting on a calendar [4, 14].
+*   **The "Local Hero" Strategy:** For beginners with a small budget, he 
+recommends filming ads in front of local landmarks (e.g., the Austin Bridge) to 
+build instant trust with local business owners [15, 16].
+*   **Numbers:** He currently spends **$10,000 to $15,000 per month** on ads and
+cites an average front-end acquisition cost of **$300 per client** [5, 17-19].
+
+### **2. Cold SMS**
+Stone recommends cold SMS as the **number one outreach method** for beginners 
+who do not have money for paid ads [20].
+*   **The Funnel Role:** It functions as a scalable version of cold calling 
+because it is "one-to-many," allowing an agency to reach hundreds of prospects 
+per day rather than dozens [2]. 
+*   **Strategy:** He suggests testing different scripts to see what resonates 
+and then driving interested responses to a landing page or booking link [21, 
+22].
+*   **Numbers:** His business partner, Mike, reportedly scaled to 
+**$8,000–$9,000 MRR** using strictly cold SMS [7].
+
+### **3. Content and YouTube (Pre-Selling)**
+Stone views his YouTube channel and company content as a massive "authority" 
+builder that reduces sales resistance [23-25].
+*   **The Funnel Role:** Content serves to **pre-sell** prospects so they arrive
+at sales calls already knowing the price point ($297/mo) and the product's value
+[26-28]. 
+*   **The 6-Minute Pre-Call Video:** Stone sends a specific "pre-all" video to 
+every prospect. If they haven't watched it, he often refuses to take the call or
+makes them watch it on the spot [26, 28, 29]. This ensures they "speak the same 
+language" regarding features like the "five-star review funnel" [26, 30].
+*   **Numbers:** His YouTube channel alone generates approximately **$40,000 to 
+$50,000 per month** in recurring revenue [31].
+
+### **4. Cold Email and Loom Videos**
+This is a high-personalization strategy Stone recommends for those who are 
+comfortable on camera but lack an ad budget [32].
+*   **The Funnel Role:** Outreach starts with a cold email. If a prospect 
+responds positively, Stone sends a **30-45 second personalized Loom video** 
+[32].
+*   **Strategy:** In the video, he shares his screen, pulls up the prospect's 
+current "trash" website, and picks it apart to show exactly how his system would
+fix it [32-34]. 
+
+### **5. Referrals and Partnerships**
+Stone leverages referrals and strategic outsourcing to handle services his 
+agency does not internally fulfill [17, 35].
+*   **The Funnel Role:** Referrals build long-term stability; he notes that for 
+some established clients, **50% of their business** comes from word-of-mouth 
+[36].
+*   **Strategic Partnerships:** Because Stone avoids "nightmare" tasks like 
+verified Google page setups (which often get suspended), he refers clients to a 
+partner company that charges **$600** for that specific service [35, 37, 38]. He
+also refers out Meta ad management for contractors to specialized partners like 
+"Corey" [17].
+
+### **6. Manual "Swamp" Methods (Walk-ins and DMs)**
+For the first **1 to 3 clients**, Stone suggests "scrappy" methods that require 
+no software [20, 39].
+*   **Walk-ins:** He recommends walking into local restaurants, food trucks, or 
+med spas and offering to build a website for free in exchange for a testimonial 
+[39-41].
+*   **Cold DMs:** While not his primary method, he notes that other successful 
+agency owners use **Facebook Cold DMs** to reach **$20,000 MRR** [7].
+*   **Numbers:** Stone's first three clients were a dog groomer (cold call), a 
+food truck, and a restaurant [39]. He notes it can cost as little as **$5 to 
+$20** to hire a VA to scrape **200–400 leads** from Google Maps to fuel these 
+manual efforts [42, 43].
+
+Resumed conversation: bcc0d593-91af-4852-89b4-0e7ad6b3ad8b

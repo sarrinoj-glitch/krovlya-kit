@@ -1,0 +1,56 @@
+Different notebook specified, starting new conversation...
+Continuing conversation 31a3e2fe...
+Answer:
+The core idea of the system is to **build a simple, automated AI system one 
+time** and then resell it to numerous local businesses—such as dentists, 
+roofers, and plumbers—for a recurring fee of **$299 per month** [1-4]. The 
+system targets small business owners who do not need complex technology but 
+require simple solutions for basic problems like answering missed calls, 
+following up with leads, and booking appointments on autopilot [5, 6].
+
+### The Product
+The specific product Jason Wardrop recommends building and reselling consists of
+**AI Agents**, with a primary focus on:
+*   **AI Voice Agents:** These can answer phone calls, have a conversation with 
+the caller, collect lead information (name, email, address), and book 
+appointments [7-14].
+*   **Conversational AI Chatbots:** These can be deployed as web chat widgets on
+a business's website or used for Instagram DMs and Facebook messages [7, 15-19].
+
+### Tools and Platform
+The system utilizes a specific **AI automation software** that is designed to be
+**white-labeled** [2, 4, 12, 20]. This means you can:
+*   Add your **own logo and domain** to the software so it appears as your own 
+company [2, 4, 21-23].
+*   Connect your **own payment processor** to collect 100% of the customer 
+payments without commission splits [21-24].
+*   Pay a flat monthly fee (e.g., **$297/month**) to the platform for 
+**unlimited client accounts**, allowing you to scale the business with fixed 
+expenses [24-26].
+
+### How It Works (Concrete Steps)
+Building and deploying the system involves a straightforward "wizard-based" 
+process that requires no coding skills [27-30]:
+
+1.  **Create the Agent:** Within the software, you create a custom agent, name 
+it (e.g., "Demo AI Voice Agent"), and select a voice (e.g., "Jessica") and an 
+LLM model, such as ChatGPT [31-34].
+2.  **Define Goals:** You set the agent's objectives, such as capturing a lead's
+name, email, and address [8, 29].
+3.  **Train with Prompts:** To make the agent specific to a niche, you use 
+**ChatGPT** to generate a prompt. For example, you can tell ChatGPT, "I am 
+making an AI voice agent for a dental practice... the end goal is to book 
+appointments," and then copy and paste the generated behavioral instructions 
+into the software's "advanced mode" [35-38].
+4.  **Test the System:** You can call the system's number to verify it correctly
+greets callers, answers questions, and accurately captures information [9-11, 
+13, 14, 39].
+5.  **Deploy to the Client:** You can add the AI agent to a client's website in 
+two ways:
+    *   **Copy/Paste Code:** Copy a small tracking code and paste it into the 
+header of the client's website [28, 30, 40-43].
+    *   **Built-in Settings:** If the client doesn't have a website, you can 
+build one using the software's templates and enable the agent via a simple 
+toggle in the settings [40, 42, 44-47].
+
+Resumed conversation: 31a3e2fe-3dc2-4fab-a512-872fffb53b16

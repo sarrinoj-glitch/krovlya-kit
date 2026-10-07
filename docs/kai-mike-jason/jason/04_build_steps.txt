@@ -1,0 +1,66 @@
+Different notebook specified, starting new conversation...
+Continuing conversation 31a3e2fe...
+Answer:
+The process of building the "build once, resell" AI system involves setting up a
+white-labeled software platform and then following a guided wizard to create and
+deploy an AI agent. 
+
+The exact step-by-step instructions are as follows:
+
+### **1. Set Up the White-Label Platform**
+Before building the specific AI product, you must configure the software to 
+appear as your own independent company:
+*   **Brand the Software:** Upload your own company logo and connect your custom
+domain to the platform [1-3].
+*   **Connect Payments:** Link your own payment processor (e.g., Stripe) to the 
+software. This ensures you collect 100% of client payments (e.g., $299/mo) with 
+no commission splits [2-5].
+
+### **2. Create the AI Voice Agent**
+Navigate to the **"AI Agents"** tab in the software sidebar and select **"Create
+a custom agent"** from scratch [6-9].
+*   **Basic Identity:** Assign an **Agent Name** (e.g., "Demo AI Voice Agent") 
+and the **Business Name** of the client (e.g., "Acme Inc.") [7, 10].
+*   **Voice and Logic:** Choose the language, select a specific AI voice (e.g., 
+"Jessica"), and set the local time zone [11-13].
+*   **Select LLM Model:** Choose the underlying AI model, such as **ChatGPT 
+version 5** [11, 13, 14].
+*   **Set Initial Message:** Write the greeting the AI uses when someone calls 
+(e.g., "Hey, you've reached Acme Inc. How can I help you today?") [14, 15]. You 
+can use dynamic fields like "Contact First Name" if the caller is already in the
+system [15-17].
+
+### **3. Configure Goals and AI Behavior**
+*   **Define Goals:** Select the specific information you want the agent to 
+capture, such as **Name, Email, and Address** [17, 18]. (Note: The system 
+automatically captures the caller's phone number) [18, 19].
+*   **Train with Custom Prompts:** Switch to **"Advanced Mode"** to provide 
+specific behavioral instructions [18, 19].
+*   **Use ChatGPT for Prompting:** To avoid technical coding, ask ChatGPT to 
+write the prompt for you. For example: *"I am making an AI voice agent for a 
+dental practice... write a prompt to train my agent on how to behave to book 
+appointments"* [20-23]. Copy and paste this text directly into the agent's 
+prompt field [21, 23].
+
+### **4. Build the Deployment Widget**
+To make the AI accessible on a website, you must create a visual interface:
+*   **Create Widget:** Go to **"Sites"** -> **"Chat Widget"** -> **"New"** and 
+select **"Voice AI"** [24-28].
+*   **Customize Appearance:** Tweak the widget's position (e.g., top right), 
+change the avatar image, and customize the call-to-action text [29-31].
+*   **Generate Code:** Click **"Save"** and then **"Get Code"** to generate a 
+small snippet of tracking code [32, 33].
+
+### **5. Deploy to the Client Website**
+There are two ways to finalize the build for a client:
+*   **Method A (Copy/Paste):** Copy the generated tracking code and paste it 
+into the **"Header Tracking Code"** section of the client's website [34-36].
+*   **Method B (Built-in Toggle):** If you built the client's website using the 
+software’s templates, go to the website's **Settings**, find the **Chat Widget**
+dropdown menu, select your newly created widget, and click **Save** [37-39].
+
+Once these steps are complete, you can **test the system** by calling the number
+to ensure the AI correctly greets you, answers questions based on your prompt, 
+and logs your lead data [40-43].
+
+Resumed conversation: 31a3e2fe-3dc2-4fab-a512-872fffb53b16

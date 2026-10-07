@@ -1,0 +1,82 @@
+Different notebook specified, starting new conversation...
+Continuing conversation bcc0d593...
+Answer:
+Kai Stone’s cold calling system is built on a high-volume, "scrappy" approach 
+designed to overcome the "skill debt" of a beginner by generating immediate 
+experience and social proof [1, 2].
+
+### **1. The EXACT Cold Call Script (The "Julie Becker" Script)**
+Kai utilizes a "pattern interrupt" to bypass the immediate defensiveness of 
+business owners [3].
+
+*   **Opener:** "Hey, is this **[Business Name]**? ... Hey, what's up 
+**[Name]**? My name’s Kai. My friend Julie Becker—well, actually my mom’s 
+friend—gave me your guys' number. She said you guys do super awesome work, but 
+she told me you guys don’t have like a website or a Google page or anything like
+that. Is that accurate?" [4-7].
+*   **The Pitch (The "Web Design Student" Angle):** "I don’t want to waste your 
+time, but I kind of just graduated college and I’m creating a web design agency.
+I have five or six clients, but I’m working for cheap right now just because 
+it’d be really cool if I could get a testimonial basically saying I did a good 
+job. I actually already built you a whole website completely for free if you 
+want to check it out." [8-11].
+*   **Qualifying Question:** "Do you have like photos and stuff of your work 
+that you’d want to put on the internet? Because I can put those on there for 
+you." [12, 13].
+*   **Transition to Booking:** "Would you be open to getting on a 10 or 
+15-minute Zoom call later today or tomorrow? I could share my screen and show 
+you the site. If you like it, you can keep it; if not, no worries, you can tell 
+me to go play with trains." [14-17].
+
+### **2. Daily Operations: Dials and Hours**
+Kai emphasizes that cold calling is "war" and requires massive volume to succeed
+[18].
+*   **Hours per Day:** **6 to 8 hours** of active dialing [19-21]. During his 
+most intense periods, he sat in his room for **12 to 14 hours a day** [22-24].
+*   **Dials per Day:** A minimum of **100 to 150 dials** per day [21, 25, 26]. 
+He notes that beginners often fail because they only make 10 calls a day [27].
+*   **Meetings Booked:** Through this volume, he consistently books **3 to 5 
+meetings per day** [6, 19].
+
+### **3. Dialer, Tools, and Lead Data**
+*   **Lead Source:** He identifies prospects directly on **Google Maps**, 
+looking for local businesses (handymen, plumbers, roofers) that lack a website 
+or have fewer than 20 reviews [26, 28, 29].
+*   **Scrapers:** He uses **Outscraper** to pull names and numbers from Google 
+Maps into a spreadsheet [30-33].
+*   **Hardware:** For his first 16–20 clients, he used no software, manually 
+typing numbers into his **iPhone** one key at a time [21, 25, 28, 32].
+*   **Recommended Dialer (for scaling):** **Kixie** or **Hot Prospector** [28, 
+34].
+*   **Meeting Tool:** **Zoom** or **Google Meet** [35, 36].
+
+### **4. Verbatim Objection Handling**
+*   **"I can't afford it right now":** "How about $97? ... No, I’m just not that
+big yet. ... Well, that’s what the website is for. How’s anyone going to see 
+your work if they can’t find you on Google?" [37, 38].
+*   **"Nothing is free in this world":** "I will say there’s a catch. If I show 
+it to you and you do like it, the whole website build is free, but we obviously 
+would still have to charge for hosting, security, and maintenance." [10, 16].
+*   **"I'm too busy to build one":** "It sounds like you don’t have time to 
+build one yourself. I charge almost nothing. I just want a testimonial." [39, 
+40].
+*   **"Let me think about it / I'll get back to you":** "No worries. You mind if
+I give you a ring back in a couple days? Can I snag your first name and a good 
+email to send over a case study or two?" [24, 38].
+*   **"What do I need a website for?":** "To get more business. Unless you’re 
+already a millionaire, in which case I’m tripping, but it seems like we’re not 
+there just yet." [9].
+
+### **5. Performance Metrics**
+*   **Dials-to-Meeting Ratio:** Books **3–5 meetings** from **100–150 dials** 
+(approximately 1 meeting for every 20–50 dials) [19, 25].
+*   **Pickup/Conversation Rate:** Aim for at least **100 conversations** on the 
+phone, not just dials [36].
+*   **Show Rate:** Approximately **1 in 4** booked Zoom calls actually show up 
+[41].
+*   **Close Rate:** Once on a Zoom call, he closes between **1 in 2** and **1 in
+3** prospects [41].
+*   **Milestone:** He obtained his first **16 clients** purely through this 
+manual cold calling process before ever running a paid ad [27, 32].
+
+Resumed conversation: bcc0d593-91af-4852-89b4-0e7ad6b3ad8b

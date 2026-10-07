@@ -1,0 +1,86 @@
+Different notebook specified, starting new conversation...
+Continuing conversation 2ec4d033...
+Answer:
+Mike builds and delivers his SaaS product by leveraging **GoHighLevel (GHL)** to
+provide "foundational systems" rather than just a standalone website [1, 2]. His
+delivery model relies heavily on **templated snapshots** and **virtual 
+assistants (VAs)** to ensure the process is repeatable and scalable [3-5].
+
+### **AI-Generated Website Building (~30 Min)**
+Mike claims his team can build a professional, 25–40 page website in **30 
+minutes to 2 hours** by following a strictly templated approach [6-9].
+*   **Templated Efficiency:** He uses the **exact same template** for every 
+niche (plumbers, concrete, landscaping), merely swapping images and text [5, 8, 
+10-12].
+*   **Custom Values:** The website is built using **"custom values"** in GHL, 
+which act as placeholders for information like business name, phone number, and 
+service areas [13, 14]. Instead of editing individual pages, Mike or a VA simply
+updates these values in a central menu, and the entire site updates 
+automatically [13, 14].
+*   **AI Content Generation:** He uses AI prompts to generate niche-specific 
+copy for the site’s pages and blog posts, eliminating the need for a content 
+writer [13-15].
+*   **Delegation:** Mike hires VAs for **$5–$10 per hour** (often paid **$40 per
+project**) to handle the "manual grunt work" of setting up the account and 
+customizing the template [4, 9, 16-19].
+
+### **GoHighLevel Setup & Snapshots**
+The entire "Marketing System" is contained within a **GHL Snapshot**, which is a
+pre-configured account template that can be loaded into a new client’s 
+sub-account with one click [3, 5, 20].
+*   **The Snapshot includes:** The AI-ready website template, pre-built 
+automated workflows (SMS/email), and the specific review funnel settings [1, 3, 
+20-22].
+*   **White-Labeling:** Clients interact with the system primarily through the 
+**Lead Connector mobile app**, which is white-labeled to make the service feel 
+like a custom, proprietary platform [23-27].
+
+### **Tech Stack and Tools**
+*   **Core Platform:** **GoHighLevel** for CRM, website hosting, and automations
+[1, 12, 22, 28].
+*   **Lead Acquisition:** **Outscraper** for scraping Google Maps data [29, 30] 
+and **Clearout Phone** for validating which numbers are mobile-ready for SMS 
+outreach [31-33].
+*   **Hiring & VAs:** **Facebook Ads** ($0.07/lead) to find talent in South 
+America [34, 35], as well as **Upwork**, **onlinejobs.ph**, and **Pros 
+Marketplace** [36-38].
+*   **Communication:** **Loom** for VA introductions and **Zoom** for 
+sales/onboarding calls [39-42].
+*   **Payments:** **Stripe** for processing recurring $297/mo subscriptions [1, 
+7, 43-45].
+
+### **Onboarding Process**
+The onboarding process takes approximately **10 to 14 days** and is designed to 
+be "easy" because "people are lazy" [46-48].
+*   **Initial Payment:** The client pays the first **$297** (or starts a two-day
+trial) via a Stripe link during or immediately after the sales call [43, 49].
+*   **Marketing Form:** Mike has the client install a **"Marketing Form"** as an
+icon on their phone’s home screen [50-52]. The client uses this to input their 
+services, service areas, and past customer lists [46, 53, 54].
+*   **Onboarding Call Tasks:**
+    *   Ensuring the **Lead Connector app** is installed and the client is 
+logged in [23, 24].
+    *   **Testing automations:** Sending a test lead to ensure the client 
+receives an immediate SMS notification [24, 55].
+    *   **Google Business Profile (GBP) Verification:** This is the most 
+"crucial" and difficult step [42, 56, 57]. Mike guides the client through 
+filming a **video verification** for Google, showing their tools, their truck, 
+and their business address [58-60].
+    *   **Launch Call:** A final meeting to show the finished site and systems 
+before going live [46].
+
+### **Automations and Features for Each Client**
+Every client receives a standard "Marketing System" package [61, 62]:
+*   **Missed Call Text-Back:** Automatically texts a lead if the contractor 
+misses a call, preventing them from going to a competitor [6, 63-66].
+*   **Automatic Lead Follow-up:** Instantly texts new leads from website forms 
+to ensure "speed to lead" [22, 27, 67-69].
+*   **5-Star Review Funnel:** A landing page that filters reviews—4 and 5-star 
+ratings are sent to Google, while 1 to 3-star ratings are sent to a **private 
+feedback form** [63, 70-74].
+*   **Database Reactivation:** Automated SMS campaigns to past customers 
+offering **10-20% discounts** to generate referrals or repeat jobs [75-79].
+*   **AI-Generated Website:** A professionally designed site with optimized 
+service area pages and blog posts for SEO [8, 15, 80, 81].
+
+Resumed conversation: 2ec4d033-e7c5-406a-8787-5efb4f4ea943

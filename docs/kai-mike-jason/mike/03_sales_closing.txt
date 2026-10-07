@@ -1,0 +1,82 @@
+Different notebook specified, starting new conversation...
+Continuing conversation 2ec4d033...
+Answer:
+Mike’s sales process for closing **$297/mo** GoHighLevel SaaS clients is 
+designed as a **one-call close** that prioritizes building rapport, identifying 
+specific pain points, and demonstrating high-value automated systems [1-3]. He 
+reports a **70% close rate** once prospects are on a Zoom meeting [4].
+
+### **Step 1: Rapport Building and Discovery**
+The call begins with casual conversation to lower the prospect's guard [1, 5]. 
+Mike then moves into **discovery** to understand the business’s current 
+situation [6, 7].
+*   **Key Questions:** He asks how long they have been in business, their 
+current lead sources (e.g., referrals, Facebook ads), and if they have a past 
+customer list [2, 7, 8].
+*   **Identifying the "Burn":** Mike often listens to prospects complain about 
+being "burned" by previous agencies that charged thousands for poor results [6, 
+9]. He uses this to position his **$297/mo** offer as a low-risk, high-value 
+alternative [6, 10, 11].
+
+### **Step 2: The Website Audit and Pain Point Identification**
+Mike performs a live audit of the prospect's current online presence, focusing 
+on their **Google Business Profile** and existing website [12, 13].
+*   **Visual Proof:** He points out flaws in their current site, such as slow 
+loading speeds or lack of lead capture forms [13, 14].
+*   **The "Free" Hook:** He reinforces that he has already built them a new, 
+professional website for **free**, and they only pay for the systems to manage 
+it [15-17].
+
+### **Step 3: The Demo Structure (The "Systems" Pitch)**
+Rather than selling "software," Mike sells a **Marketing System** [18, 19]. He 
+shares his screen to walk through four core features:
+1.  **Automatic Lead Follow-up:** He demonstrates how form submissions 
+immediately trigger a text to both the contractor and the lead, emphasizing 
+"speed to lead" [16, 20, 21].
+2.  **Missed Call Text-Back:** He explains that if the contractor misses a call,
+an automated text is sent to the lead to save the job [22-24].
+3.  **Five-Star Review Funnel:** He shows how the system filters reviews—sending
+4-5 stars to Google and directing 1-3 stars to a private feedback form to 
+protect their reputation [20, 22, 25, 26].
+4.  **Database Reactivation:** He explains how he can text their entire past 
+customer list to generate "easy win" jobs through referral offers or discounts 
+[27-30].
+
+### **Step 4: Presenting Price and Expectation Setting**
+Mike presents the price early or when asked, positioning it as a "no-brainer" 
+[17, 31].
+*   **The Price:** **$297 per month** (often referred to as **$300/mo**) [1, 3, 
+32].
+*   **Expectation Management:** He explicitly tells prospects he does **not** 
+guarantee immediate leads through ads; instead, he provides the systems to 
+capture and nurture leads organically over time [10, 29, 33]. He may even try to
+"deter" clients who demand miracles for $300 [10].
+
+### **Step 5: The Close and Objection Handling**
+Once the value is established, Mike moves directly to payment and onboarding 
+[34, 35].
+*   **Exact Closing Lines:** 
+    *   "Is there anything else you got to know then before we get you going?" 
+[36].
+    *   "What questions do you have about that?" [37, 38].
+    *   "god, you ain't got to pay me nothing yet man, seeing it is free so what
+do you think?" [17].
+*   **Objection Handling:**
+    *   **Financial/Card Issues:** If a client has frozen cards or payment 
+issues, Mike offers a **two-day trial** or sends a secure **Stripe link** for 
+them to use an alternative card [39-41].
+    *   **"I have a website":** He acknowledges it but asks, "is that something 
+you'd even want to take a look at? If you like it, you can keep it—it's already 
+built" [42, 43].
+
+### **Step 6: Immediate Onboarding**
+To prevent buyer's remorse and ensure "stickiness," Mike attempts to onboard the
+client **during the sales call** [34, 44].
+*   **Action Items:** He has them fill out a "Marketing Form" with their service
+areas and company details [34, 45].
+*   **GMB Access:** He often helps them verify or grant access to their Google 
+Business Profile while still on the Zoom call [45, 46].
+*   **The App:** He ensures they download the **Lead Connector** mobile app so 
+they can see incoming leads immediately [47, 48]
+
+Resumed conversation: 2ec4d033-e7c5-406a-8787-5efb4f4ea943

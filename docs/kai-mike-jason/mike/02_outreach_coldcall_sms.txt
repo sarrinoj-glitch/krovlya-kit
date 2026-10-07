@@ -1,0 +1,96 @@
+Different notebook specified, starting new conversation...
+Continuing conversation 2ec4d033...
+Answer:
+Mike books **3 to 5 meetings per day** using a two-pronged cold outreach 
+strategy: **Cold Calling** and **Cold SMS** [1, 2]. His operational model 
+transitions from high-volume cold calling to a more efficient "warm calling" 
+system driven by automated SMS [3-5].
+
+### **1. Lead Sourcing and Preparation**
+*   **Source:** Mike uses **Outscraper** to scrape Google Maps for local 
+businesses (plumbers, landscapers, HVAC) [6-8].
+*   **Filtering:** He targets businesses with a **verified Google profile** but 
+**fewer than 100 reviews** to ensure they are legitimate but still need growth 
+[9, 10].
+*   **Validation Tool:** He uses **Clearout Phone** to filter the scraped list 
+for **mobile numbers**. This ensures he is reaching the business owner directly 
+and that the numbers can receive SMS [10-12].
+*   **Platform:** All outreach is managed through **GoHighLevel (GHL)** [13-15].
+
+---
+
+### **2. Cold SMS Strategy ("Warm Calling")**
+Mike claims this method allows him to book his daily meetings in **less than one
+hour of work** [1].
+
+**SMS Template 1 (Free Website Offer):**
+> "Hey this is Michael i was looking you guys up on Google and saw that you 
+don't have a website or anything like that i know this is kind of random but I 
+went ahead and built you one do you want to see it?" [15, 16]
+
+**SMS Template 2 (Direct Lead Offer):**
+> "Hey man this is Michael I'm looking for one company that can handle a 5 to 15
+more jobs in the next 8 weeks. I don't know if that rings a bell?" [17-19]
+
+**Operational Detail:** 
+If a lead responds positively (e.g., "What's the plan?" or "Let's talk"), Mike 
+immediately calls them [5, 19]. He calls this **"warm calling"** because the 
+lead has already raised their hand [4, 20, 21]. 
+
+---
+
+### **3. Cold Calling Strategy (The "Julie Becker" Method)**
+When calling businesses that haven't received a text, Mike uses a specific 
+script designed to lower the prospect's guard [22, 23].
+
+*   **The Opener:** "Hey is this [Company Name]? ... Yeah this is Michael, you 
+guys did a job for **Julie Becker** a while back, she's like a friend of my 
+mom's. She said you guys do some really high-quality work..." [22-24].
+*   **The Hook:** "...but you don't have a website or anything like that, is 
+that right?" [23-25].
+*   **The Pitch:** "I actually went ahead and built you guys a beautiful 
+website, even if I do say so myself. I was honestly just wondering, is that 
+something you'd even want to take a look at? If you like it, you can keep it" 
+[16, 23, 24, 26].
+*   **The Booking:** "I can't send you a link sadly because I don't have it 
+online yet (it costs me money)... but if you have **10-15 minutes** tomorrow, we
+can hop on a quick **Zoom call**, I’ll share my screen and show you" [24, 
+27-30].
+
+---
+
+### **4. Verbatim Objection Handling**
+*   **"What's the cost?"**
+    > "It's literally **$97 a month**  for everything—management, everything we 
+do. But god, you ain't got to pay me nothing yet man, seeing it is free. So what
+do you think?" [24].
+*   **"I already have a website."**
+    > "I know you already have one, but is that something you'd even want to 
+take a look at? If you like it, you can keep it—it's already built" [31].
+*   **"I'm with another marketing company right now (e.g., Ad IQ)."**
+    > "They're probably just doing the long-term stuff... but what a lot of guys
+need is stuff like **tomorrow**. You ain't going to wait 6 months and pay for 
+nothing. We can definitely talk more about that tomorrow" [32-34].
+*   **"I need leads right now."**
+    > "I never really guarantee results... but what we can do immediately is a 
+**database reactivation**. Give me your past customer list and I’ll text them 
+all an offer to get you jobs back through the door today" [35, 36].
+
+---
+
+### **5. Operational Metrics**
+*   **Meetings Booked:** **3 to 5 per day** via SMS [1]. In his early "grind" 
+phase, he claims he booked **20 to 30 appointments a day** by cold calling for 
+**8 to 12 hours** [37].
+*   **SMS Conversion:** Sending **100 automated text messages** typically 
+results in approximately **30 replies** and **3 booked appointments** [2].
+*   **Call Success Rates:** Mike claims a **60% pickup rate** on warm calls 
+(leads who replied to SMS) compared to only **20%** for standard cold calls [4, 
+5].
+*   **Close Rate:** Mike reports a **70% close rate** on his current sales calls
+[38].
+*   **Volume Costs:** Scraping **10,000 leads** costs roughly **$30** via 
+Outscraper [7]. Cold calling from a GHL number costs about **$2 per number** 
+[13].
+
+Resumed conversation: 2ec4d033-e7c5-406a-8787-5efb4f4ea943

@@ -1,0 +1,126 @@
+Different notebook specified, starting new conversation...
+Continuing conversation bcc0d593...
+Answer:
+Kai Stone primarily sells a **pre-built marketing system** utilizing 
+white-labeled GoHighLevel software, positioned as a way to provide local 
+businesses with "outcomes" rather than just features [1-6].
+
+### 1. The Core Offer: The Smart Website & Automation System
+The centerpiece of Kai Stone's business is a templated website system designed 
+specifically for home service businesses like contractors, plumbers, and 
+landscapers [7-11].
+
+*   **What it is:** A 15 to 25-page SEO-optimized website that acts as a 
+"command center" for the client's business [12-18]. It includes four key 
+features:
+    *   **Templated Website:** A professional-looking site with specific service
+and service area pages [12, 19-22].
+    *   **Auto Call Text Back:** A bot that automatically texts a customer back 
+if the business owner misses a phone call, typically saying, "Sorry I missed 
+you, how can I help?" [14, 23-34].
+    *   **Five-Star Google Review Funnel:** A system that automates review 
+requests and uses "review gating" to send 4 and 5-star reviews to Google while 
+directing 1 to 3-star reviews to private feedback [35-47].
+    *   **Instant Lead Follow-up/Chat Widget:** A website widget that initiates 
+immediate text conversations with new leads rather than sending them to email 
+[14, 29, 48-53].
+*   **Pricing Model:** 
+    *   **Monthly Recurring:** **$297 per month** is the most frequently cited 
+core price point [1, 8, 16, 29, 54-74].
+    *   **Tiered Pricing:** He has historically used tiers of **$97, $197, and 
+$297**, though many videos state he has moved to a single **$297** plan to 
+ensure clients get the full system [75-86].
+    *   **Setup Fee:** Usually **$0 up-front** for the core system to lower the 
+barrier to entry [15, 56, 58, 64, 68, 87, 88].
+    *   **Ownership Buyout:** A **$1,000 to $1,300 buyout fee** if a client 
+wishes to leave but keep the website [89, 90].
+*   **Positioning:** Positioned as "systems, not services" [3, 5, 6, 91, 92]. It
+is sold as an "online business card" that builds trust and authority while the 
+automated nature makes the service "sticky" by integrating into the client’s 
+daily operations via a mobile app [93-106].
+
+### 2. The "Free Website" Offer
+This is a specific client acquisition strategy used as a "foot-in-the-door" [33,
+48, 61, 64, 107].
+
+*   **What it is:** Kai pitches the initial website build as **completely free**
+to remove friction [10, 15, 33, 63, 74, 107-115].
+*   **Pricing Model:** While the "build" is free, he charges **$97 to $297 per 
+month** for hosting, security, and maintenance [15, 77, 78, 80, 86, 107, 111, 
+115-123].
+*   **Positioning:** Positioned to beginners and skeptical business owners as a 
+"two-week free trial" or a "testimonial exchange" where the client provides a 
+video testimonial instead of a setup fee [77, 80, 85, 115, 116, 122, 124-129].
+
+### 3. AI Systems and Automations (Upsells and Advanced Packages)
+As his agency scaled, Kai began offering more advanced AI-driven systems [6, 72,
+130, 131].
+
+*   **What it is:** 
+    *   **AI Voice Receptionist:** An AI agent that answers phone calls, 
+provides information, and books appointments [18, 24, 132-141].
+    *   **AI Conversation Bot:** Text-based AI that follows up with leads from 
+the website, social media, or missed calls [28, 91, 92, 99, 132, 134, 135, 137, 
+140-146].
+    *   **Database Reactivation:** A one-time service where he sends a text 
+blast to a client's old lead list (e.g., "10% off Christmas special") to 
+generate immediate jobs or reviews [35, 147-160].
+*   **Pricing Model:** 
+    *   **Monthly Recurring:** Often bundled within higher-tier plans ranging 
+from **$300 to $500 per month** [72, 133, 145, 161-168].
+    *   **Setup Fee:** In some videos, he mentions charging a **$1,000 setup 
+fee** for advanced AI integrations [133, 161].
+*   **Positioning:** Positioned as "replacing a full-time receptionist" who 
+would cost $3,000 to $5,000 a month [99, 139, 169, 170].
+
+### 4. Additional Services (Upsells)
+Once a client is paying for the core system, Kai upsells higher-ticket marketing
+services [66, 120, 171-175].
+
+*   **Google Ads Management:** 
+    *   **Price:** **$750 to $1,500 per month** total [172, 176-182].
+    *   **Incremental Pricing:** Sometimes billed as an **additional $400 or 
+$450** on top of the base $297 [178, 183, 184].
+*   **Google My Business (GMB) Optimization:** 
+    *   **Price:** A one-time fee of **$300 to $500** [185-188].
+    *   **Incentive:** Offered for **free** if the client pays for three months 
+of the core service up-front (e.g., **$891**) [185, 187, 189-191].
+*   **Advanced SEO (Contractor Supreme):** 
+    *   **What it is:** blog posts, voice search optimization, and detailed 
+monthly ranking reports [192, 193].
+*   **Invoicing and Calendar Booking:** Often added to create a "sticky" 
+vertical system where the client manages their entire cash flow and schedule 
+through Kai's app [95, 97, 100, 104, 114, 159, 160, 165, 169, 194-201].
+
+### 5. Coaching and Community
+Kai leverages his YouTube presence to build an education business [202, 203].
+
+*   **What it is:** **The Stone Scaling / Stone Systems School Community**, 
+which includes business blueprints, website templates, outreach scripts (like 
+the "Julie Becker" cold call script), and hiring snapshots [2, 33, 60, 137, 165,
+175, 189, 204-233].
+*   **Price Point:** 
+    *   **Free:** Most videos state the community and his templates are **free**
+if you sign up for GoHighLevel using his **affiliate link** [2, 17, 33, 60, 137,
+189, 205, 207, 208, 210, 212-220, 224-240].
+    *   **Paid Coaching:** He mentions spending **$50,000+** on his own coaching
+and offers a program with weekly Zoom calls to help students scale [213, 215, 
+220, 232, 241, 242].
+*   **Positioning:** Positioned as "copy-pasting" a proven million-dollar 
+business model [1, 213, 226, 232, 235, 243-245].
+
+### Summary of Dollar Figures Mentioned
+*   **Core Monthly Subscription:** $297/mo [1, 8, 66].
+*   **Starter/Hosting Monthly Fee:** $97/mo [2, 15, 76, 85, 115, 117, 118, 122, 
+246].
+*   **Average Revenue Per User (ARPU):** $317 - $321/mo [6, 59, 61, 132, 247].
+*   **Total Monthly Recurring Revenue (MRR):** $28k [75, 248], $75k [63], $145k 
+[16], $170k [9], $184k [249], $199k [250], $215k [59, 130], $318k [70], $319k 
+[251], $321k [252], $358k [238], $365k [244], $377k [62, 71], $425k [73], $434k 
+[1, 253], $439k [8].
+*   **Setup Fee for Upsells:** $500 - $1,000 [117, 133, 161].
+*   **Ad Management Fees:** $750 - $1,500/mo [172, 180, 182].
+*   **Buyout Fee:** $1,000 - $1,300 [89, 90].
+*   **VA Fulfillment Cost (Internal):** $30 - $60 per project [16, 69, 254-259].
+
+Resumed conversation: bcc0d593-91af-4852-89b4-0e7ad6b3ad8b

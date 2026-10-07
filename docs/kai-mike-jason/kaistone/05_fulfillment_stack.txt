@@ -1,0 +1,95 @@
+Different notebook specified, starting new conversation...
+Continuing conversation bcc0d593...
+Answer:
+Kai Stone’s fulfillment and delivery model is built on **"systems, not 
+services,"** utilizing white-labeled GoHighLevel (GHL) software to provide 
+automated outcomes for local businesses at a low-ticket recurring price point 
+[1-3].
+
+### **1. GoHighLevel SaaS Setup and White-Labeling**
+*   **The Model:** Stone white-labels GHL, reselling its multi-billion dollar 
+infrastructure as his own proprietary system (Stone Systems) [2, 4, 5].
+*   **Pricing & Rebilling:** The core offer is positioned at **$297 per month** 
+[1, 6, 7]. While early iterations used tiers (e.g., $97, $197), he now largely 
+pushes a single **$297 plan** to ensure clients receive the full suite of 
+automations, which he claims provides the best results [7-10].
+*   **The White-Labeled App:** The system is delivered through the **Lead 
+Connector mobile app** [11-13]. He "forces" clients to use this app for their 
+daily communication, making the service "sticky" as it becomes the business's 
+central command center for leads, reviews, and calendars [14-16].
+
+### **2. Website Building Process and Turnaround**
+*   **The Turnaround:** The standard delivery time for a new website is **7 to 
+10 days** (most frequently cited as **9 days**) after the client submits their 
+onboarding information [17-21].
+*   **The Process:** 
+    *   **Templatization:** Stone uses **one core website template** (15 to 25 
+pages) for an entire niche (e.g., all plumbers get the same layout) [22-25]. 
+    *   **Custom Values:** GHL **"Snapshots"** are used to copy the system 
+structure into a new account [26-28]. The specific business data is populated 
+through **"custom values"** (e.g., phone number, email, service areas) that 
+automatically update across the entire site once inputted in the backend 
+[29-32].
+    *   **AI Implementation:** He uses **ChatGPT** to generate SEO-optimized 
+copy from the client's onboarding form and recently began using GHL’s **AI 
+Website Builder** to create demo sites in under 5 minutes [29, 33-35].
+
+### **3. AI Systems and Automations Delivered**
+The "System" consists of four to five core features designed to capture and 
+convert leads:
+*   **Auto Call Text Back:** An automated text sent instantly if a business 
+owner misses a phone call (e.g., "Sorry I missed you, how can I help?") [36-38].
+*   **AI Conversation/Text Bot:** A bot that follows up with leads from the 
+website, social media, or missed calls via text to book appointments [39-42].
+*   **Five-Star Google Review Funnel:** A "review gating" system. If a customer 
+selects 4 or 5 stars, they are sent to the public Google page; 1-3 stars are 
+diverted to a "private feedback" form to prevent public bad reviews [43-47].
+*   **AI Voice Receptionist:** An advanced agent that answers calls and books 
+appointments live on the phone [48-50].
+*   **Instant Lead Follow-up:** A chat widget or quote form on the website that 
+initiates an immediate text conversation with new leads rather than sending them
+to email [36, 51, 52].
+
+### **4. Client Onboarding and Success**
+*   **The Form:** Immediately after payment, the client receives a **detailed 
+onboarding form** [53-55]. Stone tells them this is the most important step: 
+"The better you do on this onboarding form, the better your website's going to 
+be" [29, 53].
+*   **The Launch/Onboarding Call:** Once the site is built (approx. 9 days), the
+client has a call with a **Customer Success Manager (CSM)** [54, 56-58]. The CSM
+walks the client through the system, shows them how to use the mobile app, and 
+makes final photo/wording tweaks [18, 59, 60].
+*   **Outsourcing Delivery:** Stone does not press buttons. He hires 
+**project-based Virtual Assistants (VAs)** (usually from the Philippines via 
+Onlinejobs.ph or Upwork) and pays them **$30 to $60** to set up the entire 
+client account and website using his SOPs [61-65].
+
+### **5. Retention and Churn-Reduction Tactics**
+*   **Database Reactivation (The "Quick Win"):** To prevent early churn, Stone 
+offers an immediate text blast to the client's old lead list to generate instant
+reviews or jobs (e.g., a "10% off Christmas special") [66-69].
+*   **Sticking Point:** By integrating their **calendars, invoicing, and 
+messaging** into the white-labeled app, the business becomes reliant on the 
+software to function, making it difficult to cancel [11, 14, 15, 70].
+*   **The Buyout Fee:** If a client wishes to leave but keep the website he 
+built, Stone charges a **$1,000 to $1,300 buyout fee** to recoup acquisition 
+costs [71, 72].
+*   **Stated Churn:** Churn rate is cited between **7% and 8.3%** [73, 74].
+
+### **6. Complete Tech Stack and Tools**
+*   **Core Platform:** **GoHighLevel (GHL)** for CRM, website, and automation 
+[4, 73].
+*   **Lead Generation & Outreach:** **Outscraper** for scraping Google Maps data
+[75, 76]; **iPhone** for manual dialing (early days) [77, 78]; **Kixie or Hot 
+Prospector** for power dialing [79].
+*   **Client Communication:** **Zoom** or **Google Meet** for sales and 
+onboarding calls [80-82]; **Loom** for recording SOPs and personalized outreach 
+videos [83].
+*   **Financials:** **Stripe** for payment processing [73, 84-86]; 
+**Mercury.com** for business banking [87].
+*   **Operations & Hiring:** **Upwork**, **Fiverr**, or **Onlinejobs.ph** for 
+hiring VAs and CSMs [61, 63, 88, 89].
+*   **Specific Features:** **Search Atlas** for AI-driven SEO [90]; **Canva** 
+for logo mockups and social media posts [89, 91, 92].
+
+Resumed conversation: bcc0d593-91af-4852-89b4-0e7ad6b3ad8b
