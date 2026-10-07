@@ -5,3 +5,4 @@ __pycache__/
 site-template/sites/
 # сырые выгрузки парсера 2ГИС
 leads/raw/
+site-template/assets/*/src/
