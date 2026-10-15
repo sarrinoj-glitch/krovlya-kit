@@ -343,7 +343,7 @@ def build(c):
       <div class="v3-calc-step" data-step="1">
         <h4>Шаг 1 из 3 · {k.get("area_title", "Площадь кровли")}</h4>
         <p>{k["area_hint"]}</p>
-        <input type="number" inputmode="numeric" min="10" max="50000" placeholder="{k["area_placeholder"]}" class="v3-calc-input" data-calc-area aria-label="Площадь кровли в квадратных метрах">
+        <input type="number" inputmode="numeric" min="10" max="50000" placeholder="{k["area_placeholder"]}" class="v3-calc-input" data-calc-area aria-label="{k.get("area_title", "Площадь кровли")} в квадратных метрах">
         <div class="v3-calc-actions"><button type="button" class="v3-calc-btn v3-calc-btn--next" data-calc-next>Далее →</button></div>
       </div>
 
